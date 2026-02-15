@@ -8,68 +8,68 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
+                <div class="p-4 sm:p-6 text-gray-900">
 
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-200" align="center">
-                                <th class="p-3 border">Barcode</th>
-                                <th class="p-3 border">ชื่อสินค้า</th>
-                                <th class="p-3 border">สต็อกทั้งหมด</th>
-                                <th class="p-3 border">ถูกจอง (Reserve)</th>
-                                <th class="p-3 border text-green-600">คงเหลือพร้อมจ่าย</th>
-                                <th class="p-3 border">พิมพ์สติกเกอร์</th>
-                                <th class="p-3 border">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($products as $product)
-                                <tr class="hover:bg-gray-50" align="center">
-                                    <td class="p-3 border font-mono text-sm">{{ $product->barcode }}</td>
-                                    <td class="p-3 border">{{ $product->name }}</td>
-                                    <td class="p-3 border text-blue-600 font-bold">
-                                        {{ number_format($product->stocks_sum_quantity ?? 0) }}
-                                    </td>
-                                    <td class="p-3 border text-red-500">
-                                        {{ number_format($product->stocks_sum_reserved_qty ?? 0) }}
-                                    </td>
-                                    <td class="p-3 border text-green-600 font-bold">
-                                        {{ number_format(($product->stocks_sum_quantity ?? 0) - ($product->stocks_sum_reserved_qty ?? 0)) }}
-                                    </td>
-                                    <td class="p-3 border">
-                                        <div class="flex flex-col items-center justify-center gap-2">
-                                            @if($product->barcode_image)
-                                                <img id="barcode-img-{{ $product->id }}" 
-                                                     src="{{ asset('storage/barcodes/' . $product->barcode_image) }}" 
-                                                     style="height: 33px; width: auto;" 
-                                                     alt="barcode">
-                                            @else
-                                                <span class="text-xs text-red-500 font-bold bg-red-100 px-2 py-1 rounded">ไม่มีรูปภาพ</span>
-                                            @endif
-
-                                            <button type="button" 
-                                                onclick="printStickerDirect('{{ addslashes($product->name) }}', '{{ $product->sku }}', '{{ $product->id }}')"
-                                                class="bg-gray-800 hover:bg-black text-white py-1 px-4 rounded-full text-xs shadow-sm transition">
-                                                🖨️ พิมพ์
-                                            </button>
-                                        </div>
-                                    </td>
-                                    <td class="p-3 border text-center">
-                                        <form action="{{ route('inventory.destroy', $product->id) }}" method="POST"
-                                            onsubmit="return confirm('⚠️ คุณแน่ใจใช่ไหมที่จะลบสินค้านี้?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900 transition font-bold">
-                                                ลบรายการ
-                                            </button>
-                                        </form>
-                                    </td>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse whitespace-nowrap min-w-[900px]">
+                            <thead>
+                                <tr class="bg-gray-200" align="center">
+                                    <th class="p-3 border">Barcode</th>
+                                    <th class="p-3 border">ชื่อสินค้า</th>
+                                    <th class="p-3 border">สต็อกทั้งหมด</th>
+                                    <th class="p-3 border">ถูกจอง (Reserve)</th>
+                                    <th class="p-3 border text-green-600">คงเหลือพร้อมจ่าย</th>
+                                    <th class="p-3 border">พิมพ์สติกเกอร์</th>
+                                    <th class="p-3 border">จัดการ</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach ($products as $product)
+                                    <tr class="hover:bg-gray-50" align="center">
+                                        <td class="p-3 border font-mono text-sm">{{ $product->barcode }}</td>
+                                        <td class="p-3 border">{{ $product->name }}</td>
+                                        <td class="p-3 border text-blue-600 font-bold">
+                                            {{ number_format($product->stocks_sum_quantity ?? 0) }}
+                                        </td>
+                                        <td class="p-3 border text-red-500">
+                                            {{ number_format($product->stocks_sum_reserved_qty ?? 0) }}
+                                        </td>
+                                        <td class="p-3 border text-green-600 font-bold">
+                                            {{ number_format(($product->stocks_sum_quantity ?? 0) - ($product->stocks_sum_reserved_qty ?? 0)) }}
+                                        </td>
+                                        <td class="p-3 border">
+                                            <div class="flex flex-col items-center justify-center gap-2">
+                                                @if($product->barcode_image)
+                                                    <img id="barcode-img-{{ $product->id }}" 
+                                                         src="{{ asset('storage/barcodes/' . $product->barcode_image) }}" 
+                                                         style="height: 33px; width: auto;" 
+                                                         alt="barcode">
+                                                @else
+                                                    <span class="text-xs text-red-500 font-bold bg-red-100 px-2 py-1 rounded">ไม่มีรูปภาพ</span>
+                                                @endif
 
-                </div>
+                                                <button type="button" 
+                                                    onclick="printStickerDirect('{{ addslashes($product->name) }}', '{{ $product->sku }}', '{{ $product->id }}')"
+                                                    class="bg-gray-800 hover:bg-black text-white py-1 px-4 rounded-full text-xs shadow-sm transition">
+                                                    🖨️ พิมพ์
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td class="p-3 border text-center">
+                                            <form action="{{ route('inventory.destroy', $product->id) }}" method="POST"
+                                                onsubmit="return confirm('⚠️ คุณแน่ใจใช่ไหมที่จะลบสินค้านี้?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-600 hover:text-red-900 transition font-bold">
+                                                    ลบรายการ
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div> </div>
             </div>
         </div>
     </div>
