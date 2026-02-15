@@ -28,7 +28,7 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     <h3 class="font-bold text-lg mb-4">🔔 กิจกรรมล่าสุด (Recent Activities)</h3>
-                    <table class="w-full text-left">
+                    <table class="w-full text-center">
                         <thead>
                             <tr class="text-gray-400 text-sm border-b">
                                 <th class="pb-3">เวลา</th>
@@ -54,7 +54,7 @@
                             @endforeach
                         </tbody>
                     </table>
-                    <div class="mt-4 text-center">
+                    <div class="mt-4 text-right">
                         <a href="{{ route('transactions.index') }}" class="text-blue-500 hover:underline text-sm">ดูประวัติทั้งหมด &rarr;</a>
                     </div>
                 </div>

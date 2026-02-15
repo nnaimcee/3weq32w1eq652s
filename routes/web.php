@@ -43,6 +43,10 @@ Route::get('/inventory', [InventoryController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('inventory.index');
 
+// Route สำหรับแสดงแผนที่คลังสินค้า
+Route::get('/warehouse-map', [App\Http\Controllers\InventoryController::class, 'warehouseMap'])
+    ->middleware(['auth'])->name('inventory.map');
+
 // Route สำหรับพิมพ์บาร์โค้ดสินค้า
 Route::get('/products/barcode/{id}', [ProductController::class, 'printBarcode'])
     ->middleware(['auth', 'verified'])

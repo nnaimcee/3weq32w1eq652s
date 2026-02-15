@@ -20,6 +20,10 @@
                         {{ __('📦 สต็อกสินค้า') }}
                     </x-nav-link>
 
+                    <x-nav-link :href="route('inventory.map')" :active="request()->routeIs('inventory.map')">
+                        {{ __('🗺️ แผนผังคลัง') }}
+                    </x-nav-link>
+
                     <x-nav-link :href="route('inbound.create')" :active="request()->routeIs('inbound.create')">
                         {{ __('📥 รับของเข้า') }}
                     </x-nav-link>
