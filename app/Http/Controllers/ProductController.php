@@ -52,4 +52,22 @@ class ProductController extends Controller
 
         return redirect()->route('inventory.index')->with('success', 'เพิ่มสินค้าใหม่เรียบร้อยแล้ว!');
     }
+
+    public function getByBarcode($barcode)
+    {
+        // ค้นหาสินค้าจากเลขบาร์โค้ด
+        $product = \App\Models\Product::where('barcode', $barcode)->first();
+
+        if ($product) {
+            return response()->json([
+                'success' => true,
+                'product' => $product
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'ไม่พบข้อมูลสินค้า'
+        ]);
+    }
 }

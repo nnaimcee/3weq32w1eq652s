@@ -84,6 +84,9 @@ Route::delete('/inventory/{id}', [App\Http\Controllers\InventoryController::clas
     ->middleware(['auth'])
     ->name('inventory.destroy');
 
+// API Route สำหรับดึงข้อมูลสินค้าโดยใช้บาร์โค้ด (ใช้ในฟอร์มรับของเข้า)
+Route::get('/api/products/{barcode}', [App\Http\Controllers\ProductController::class, 'getByBarcode'])
+    ->middleware(['auth']);
 
 
 // --- IGNORE --- (ส่วนนี้เป็นโค้ดที่ Laravel สร้างมาให้แล้ว ไม่ต้องแก้ไข)
