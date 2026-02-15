@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('locations', function (Blueprint $table) {
             $table->id();
+            $table->string('name', 100); // ชื่อเรียก เช่น Z1-S1-B01
+            $table->string('zone', 50)->nullable();
+            $table->string('shelf', 50)->nullable();
+            $table->string('bin', 50)->nullable();
+            $table->enum('type', ['storage', 'transit'])->default('storage'); // ประเภทพื้นที่
+            $table->enum('status', ['active', 'inactive', 'full'])->default('active'); // สถานะ
             $table->timestamps();
         });
     }

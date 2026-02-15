@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('stocks', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('product_id')->constrained('products')->onDelete('cascade'); // เชื่อมตาราง products
+            $table->foreignId('location_id')->constrained('locations')->onDelete('cascade'); // เชื่อมตาราง locations
+            $table->integer('quantity')->default(0); // จำนวนจริงที่มี
+            $table->integer('reserved_qty')->default(0); // จำนวนที่ถูกจอง (กันที่)
+            $table->string('lot_number', 50)->nullable();
+            $table->dateTime('received_date'); // วันที่รับเข้า (สำคัญมากสำหรับเรียงลำดับ FIFO)
+            $table->date('expiry_date')->nullable(); // วันหมดอายุ
             $table->timestamps();
         });
     }
