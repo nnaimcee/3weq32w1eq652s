@@ -7,6 +7,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\InboundController;
 use App\Http\Controllers\OutboundController;
 use App\Http\Controllers\TransferController;
+use App\Http\Controllers\TransactionController;
 
 // Laravel จะอ่านไฟล์นี้เพื่อกำหนดเส้นทาง (Route) ต่างๆ ของเว็บแอปพลิเคชันเรา
 Route::get('/', function () {
@@ -44,8 +45,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/transfer/receive', [TransferController::class, 'receive'])->name('transfer.receive');
 });
 
-
-
+// Route สำหรับดูประวัติการทำรายการ (Transactions)
+Route::get('/transactions', [TransactionController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('transactions.index');
 
 
 

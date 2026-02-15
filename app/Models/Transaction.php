@@ -20,4 +20,24 @@ class Transaction extends Model
         'status',
         'ref_doc_no',
     ];
+
+    // เชื่อมไปหาคนทำรายการ
+    public function user() {
+        return $this->belongsTo(User::class);
+    }
+
+    // เชื่อมไปหาสินค้า
+    public function product() {
+        return $this->belongsTo(Product::class);
+    }
+
+    // เชื่อมไปหาตำแหน่งต้นทาง
+    public function fromLocation() {
+        return $this->belongsTo(Location::class, 'from_location_id');
+    }
+
+    // เชื่อมไปหาตำแหน่งปลายทาง
+    public function toLocation() {
+        return $this->belongsTo(Location::class, 'to_location_id');
+    }
 }
