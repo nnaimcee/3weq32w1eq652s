@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\Product;
+use App\Models\Stock;
+use App\Models\Transaction;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InventoryController;
@@ -9,15 +12,31 @@ use App\Http\Controllers\OutboundController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\TransactionController;
 
-// Laravel จะอ่านไฟล์นี้เพื่อกำหนดเส้นทาง (Route) ต่างๆ ของเว็บแอปพลิเคชันเรา
-Route::get('/', function () {
-    return view('welcome');
-});
-
 // --- IGNORE --- (ส่วนนี้เป็นโค้ดที่ Laravel สร้างมาให้แล้ว ไม่ต้องแก้ไข)
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    // 1. นับจำนวนสินค้าทั้งหมด
+    $totalProducts = Product::count();
+    
+    // 2. รวมจำนวนสต็อกทั้งหมด
+    $totalStock = Stock::sum('quantity');
+    
+    // 3. หาสินค้าที่ของใกล้หมด (ต่ำกว่า min_stock)
+    $lowStockCount = Product::withSum('stocks', 'quantity')
+        ->get()
+        ->filter(function($product) {
+            return $product->stocks_sum_quantity < $product->min_stock;
+        })->count();
+
+    // 4. ดึงประวัติล่าสุด 5 รายการ
+    $recentActivities = Transaction::with(['product', 'user'])
+        ->latest()
+        ->take(5)
+        ->get();
+
+    // ส่งตัวแปรทั้งหมดไปที่ View ด้วยคำสั่ง compact
+    return view('dashboard', compact('totalProducts', 'totalStock', 'lowStockCount', 'recentActivities'));
 })->middleware(['auth', 'verified'])->name('dashboard');
+
 
 // Route สำหรับแสดงหน้าสต็อกสินค้า
 Route::get('/inventory', [InventoryController::class, 'index'])
