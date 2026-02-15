@@ -19,4 +19,16 @@ class Stock extends Model
         'received_date',
         'expiry_date',
     ];
+
+    // เพิ่มฟังก์ชันเชื่อมต่อไปยัง Product 
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    // เพิ่มฟังก์ชันเชื่อมต่อไปยัง Location 
+    public function location()
+    {
+        return $this->belongsTo(Location::class);
+    }
 }

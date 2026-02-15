@@ -6,6 +6,7 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\InboundController;
 use App\Http\Controllers\OutboundController;
+use App\Http\Controllers\TransferController;
 
 // Laravel จะอ่านไฟล์นี้เพื่อกำหนดเส้นทาง (Route) ต่างๆ ของเว็บแอปพลิเคชันเรา
 Route::get('/', function () {
@@ -35,8 +36,13 @@ Route::post('/inbound', [InboundController::class, 'store'])->middleware(['auth'
 Route::get('/outbound', [OutboundController::class, 'create'])->middleware(['auth', 'verified'])->name('outbound.create');
 Route::post('/outbound', [OutboundController::class, 'store'])->middleware(['auth', 'verified'])->name('outbound.store');
 
-
-
+// Routes สำหรับโอนย้ายสินค้า (Transfer)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/transfer/send', [TransferController::class, 'create'])->name('transfer.create');
+    Route::post('/transfer/send', [TransferController::class, 'send'])->name('transfer.send');
+    Route::get('/transfer/pending', [TransferController::class, 'pending'])->name('transfer.pending');
+    Route::post('/transfer/receive', [TransferController::class, 'receive'])->name('transfer.receive');
+});
 
 
 
