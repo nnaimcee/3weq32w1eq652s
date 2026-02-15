@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
+use Illuminate\Support\Facades\Storage;
 
 class InventoryController extends Controller
 {
@@ -26,16 +27,22 @@ class InventoryController extends Controller
         return view('inventory.map', compact('zones'));
     }
     public function destroy($id)
-    {
-        // ค้นหาสินค้าที่ต้องการลบ
-        $product = \App\Models\Product::findOrFail($id);
+{
+    // 1. ค้นหาสินค้าที่ต้องการลบ
+    $product = Product::findOrFail($id);
 
-        // ลบรายการสต็อกที่เกี่ยวข้องทั้งหมดก่อน (เพื่อป้องกัน Error Foreign Key)
-        $product->stocks()->delete();
-
-        // ลบตัวสินค้า
-        $product->delete();
-
-        return redirect()->back()->with('success', '🗑️ ลบสินค้าและข้อมูลสต็อกที่เกี่ยวข้องเรียบร้อยแล้ว');
+    // 2. เช็คว่าสินค้าตัวนี้มีรูปบาร์โค้ดบันทึกไว้ไหม
+    if ($product->barcode_image) {
+        // เช็คให้ชัวร์ว่ามีไฟล์นี้อยู่ในโฟลเดอร์จริงๆ แล้วทำการลบไฟล์ทิ้ง
+        if (Storage::disk('public')->exists('barcodes/' . $product->barcode_image)) {
+            Storage::disk('public')->delete('barcodes/' . $product->barcode_image);
+        }
     }
+
+    // 3. ลบข้อมูลสินค้าออกจาก Database
+    $product->delete();
+
+    // 4. เด้งกลับไปหน้าเดิมพร้อมข้อความแจ้งเตือน
+    return redirect()->route('inventory.index')->with('success', 'ลบรายการสินค้าและไฟล์รูปบาร์โค้ดเรียบร้อยแล้ว!');
+}
 }

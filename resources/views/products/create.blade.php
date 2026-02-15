@@ -32,7 +32,7 @@
                             <div id="barcode_container" class="flex justify-center mb-1">
                                 {!! DNS1D::getBarcodeHTML('12345678', 'C128', 1.5, 33) !!}
                             </div>
-                            <div class="text-[10px] font-mono" id="preview_sku">SKU12345678</div>
+                            <div class="text-[10px] font-mono" id="preview_sku">{{ $nextSku }}</div>
                         </div>
 
                         <button type="button" onclick="printSticker()"

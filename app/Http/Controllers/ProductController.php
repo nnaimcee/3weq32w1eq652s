@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
+use Illuminate\Support\Facades\Storage;
+use Milon\Barcode\Facades\DNS1DFacade as DNS1D;
 
 class ProductController extends Controller
 {
@@ -43,34 +45,45 @@ class ProductController extends Controller
         // ถ้าไม่ได้กรอกบาร์โค้ดมา ให้ใช้ SKU เป็นบาร์โค้ดแทน
         $barcode = $request->barcode ?: $request->sku;
 
+        // 1. ตั้งชื่อไฟล์รูปภาพให้ไม่ซ้ำกัน (เช่น barcode_SKU-000001.png)
+        $imageName = 'barcode_' . $request->sku . '.png';
+
+        // 2. สั่งสร้างบาร์โค้ดเป็นไฟล์ภาพ PNG
+        $barcodeBase64 = DNS1D::getBarcodePNG($barcode, 'C128', 1.5, 33);
+
+        // 3. เซฟไฟล์ภาพลงในโฟลเดอร์ storage/app/public/barcodes/
+        Storage::disk('public')->put('barcodes/' . $imageName, base64_decode($barcodeBase64));
+
+        // 4. บันทึกข้อมูลทั้งหมด (รวมถึงชื่อไฟล์รูป) ลงฐานข้อมูล
         Product::create([
             'name' => $request->name,
             'sku' => $request->sku,
             'barcode' => $barcode,
             'min_stock' => $request->min_stock ?? 0,
+            'barcode_image' => $imageName, // ตรงนี้จะทำงานได้เพราะเราแก้ Model ในจุดที่ 1 แล้ว
         ]);
 
-        return redirect()->route('inventory.index')->with('success', 'เพิ่มสินค้าใหม่เรียบร้อยแล้ว!');
+        return redirect()->route('inventory.index')->with('success', 'เพิ่มสินค้าและสร้างรูปบาร์โค้ดอัตโนมัติเรียบร้อย!');
     }
 
     public function getByBarcode($barcode)
     {
         // ค้นหาสินค้าจากเลขบาร์โค้ด
         $product = \App\Models\Product::where('barcode', $barcode)
-        ->withSum('stocks', 'quantity') 
-        ->first();
+            ->withSum('stocks', 'quantity') 
+            ->first();
 
         if ($product) {
-        return response()->json([
-            'success' => true,
-            'product' => [
-                'id' => $product->id,
-                'name' => $product->name,
-                'sku' => $product->sku,
-                'total_stock' => $product->stocks_sum_quantity ?? 0 // ยอดคงเหลือรวม
-            ]
-        ]);
-    }
+            return response()->json([
+                'success' => true,
+                'product' => [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'sku' => $product->sku,
+                    'total_stock' => $product->stocks_sum_quantity ?? 0 // ยอดคงเหลือรวม
+                ]
+            ]);
+        }
 
         return response()->json([
             'success' => false,

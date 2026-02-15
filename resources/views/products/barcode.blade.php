@@ -2,59 +2,77 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Print Barcode - {{ $product->name }}</title>
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <title>Print Barcode - {{ $product->sku }}</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; margin-top: 50px; }
-        
-        /* กรอบจำลองขนาดสติกเกอร์ */
-        .label-box {
-            border: 2px dashed #ccc;
-            padding: 20px;
-            display: inline-block;
-            border-radius: 8px;
-            background-color: white;
+        /* ตั้งค่าหน้ากระดาษให้เป็นขนาดสติกเกอร์ 50mm x 30mm */
+        @page {
+            size: 50mm 30mm;
+            margin: 0;
         }
 
-        /* ปุ่มสั่งพิมพ์ */
-        .btn-print {
-            background-color: #2563eb; color: white; padding: 10px 20px;
-            border: none; border-radius: 5px; font-size: 16px; cursor: pointer;
-            margin-bottom: 20px;
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 30mm;
+            width: 50mm;
+            font-family: 'Inter', sans-serif;
         }
 
-        /* CSS สำหรับตอนสั่งพิมพ์จริง (ซ่อนปุ่ม และเอากรอบออก) */
+        /* ตกแต่งให้เหมือนหน้าเพิ่มสินค้า */
+        .sticker {
+            width: 50mm;
+            height: 30mm;
+            text-align: center;
+            padding: 2mm;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .product-name {
+            font-size: 10px;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            margin-bottom: 2px;
+        }
+
+        .barcode-container {
+            margin-bottom: 2px;
+        }
+
+        .sku-text {
+            font-size: 10px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        /* ซ่อนปุ่มตอนสั่งพิมพ์ */
         @media print {
-            .no-print { display: none !important; }
-            .label-box { border: none; margin: 0; padding: 0; }
-            body { margin: 0; }
+            .no-print {
+                display: none;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-100">
+<body onload="window.print();">
 
-    <div class="no-print">
-        <button onclick="window.print()" class="btn-print">🖨️ พิมพ์สติกเกอร์บาร์โค้ด</button>
-        <br><br>
-        <a href="/inventory" style="color: #4b5563; text-decoration: none;">&larr; กลับไปหน้ารายการสินค้า</a>
+    <div class="sticker">
+        <div class="product-name">{{ $product->name }}</div>
+
+        <div class="barcode-container">
+            {!! DNS1D::getBarcodeHTML($product->barcode ?: $product->sku, 'C128', 1.5, 33) !!}
+        </div>
+
+        <div class="sku-text">{{ $product->sku }}</div>
     </div>
-
-    <div class="label-box">
-        <h3 style="margin: 0 0 10px 0; font-size: 18px;">{{ $product->name }}</h3>
-        <svg id="barcode"></svg>
-        <p style="margin: 5px 0 0 0; font-size: 14px; color: #555;">SKU: {{ $product->barcode }}</p>
-    </div>
-
-    <script>
-        JsBarcode("#barcode", "{{ $product->barcode }}", {
-            format: "CODE128", // ฟอร์แมตยอดนิยมที่อ่านง่ายที่สุด
-            lineColor: "#000",
-            width: 2,          // ความหนาของเส้น
-            height: 60,        // ความสูง
-            displayValue: true // ให้แสดงตัวเลขบาร์โค้ดข้างใต้ด้วย
-        });
-    </script>
 
 </body>
 </html>

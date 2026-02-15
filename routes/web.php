@@ -52,10 +52,13 @@ Route::get('/products/barcode/{id}', [ProductController::class, 'printBarcode'])
     ->middleware(['auth', 'verified'])
     ->name('products.barcode');
 
+
+
 // Routes สำหรับจัดการสินค้า (เพิ่มสินค้าใหม่)
 Route::middleware(['auth'])->group(function () {
     Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
     Route::post('/products/store', [ProductController::class, 'store'])->name('products.store');
+    Route::get('/products/{id}/print', [ProductController::class, 'printBarcode'])->name('products.print_barcode');
 });
 
 // Routes สำหรับรับของเข้า (Inbound)
