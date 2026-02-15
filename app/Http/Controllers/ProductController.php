@@ -18,17 +18,18 @@ class ProductController extends Controller
     
     public function create()
     {
-        // 1. ดึงข้อมูลสินค้าล่าสุด
-        $lastProduct = Product::orderBy('id', 'desc')->first();
+        // 1. ดึงสินค้าที่มี SKU รูปแบบ 'SKU-xxxxxx' ที่มีเลขมากที่สุด
+        // โดยการสั่งตัดคำว่า 'SKU-' ออกแล้วแปลงเป็นตัวเลขเพื่อหาค่า Max
+        $lastSkuRecord = \App\Models\Product::where('sku', 'LIKE', 'SKU-%')
+            ->selectRaw('MAX(CAST(SUBSTRING(sku, 5) AS UNSIGNED)) as max_sku')
+            ->first();
 
-        // 2. คำนวณเลขถัดไป
-        $nextId = $lastProduct ? $lastProduct->id + 1 : 1;
+        // 2. ถ้ามีข้อมูลให้เอาค่า Max + 1 ถ้าไม่มีให้เริ่มที่ 1
+        $nextId = ($lastSkuRecord && $lastSkuRecord->max_sku) ? $lastSkuRecord->max_sku + 1 : 1;
 
-        // 3. สร้างรหัส SKU (เช่น SKU-000001)
+        // 3. จัดรูปแบบรหัส (เช่น SKU-000003)
         $nextSku = 'SKU-' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
 
-        // 4. ส่งตัวแปรไปที่หน้า View ด้วยคำสั่ง compact
-        // *** มั่นใจว่าใน compact พิมพ์ชื่อตัวแปรไม่มีเครื่องหมาย $ ***
         return view('products.create', compact('nextSku'));
     }
 
