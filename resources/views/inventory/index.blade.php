@@ -12,13 +12,14 @@
 
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-gray-200"  align="center">
+                            <tr class="bg-gray-200" align="center">
                                 <th class="p-3 border">Barcode</th>
                                 <th class="p-3 border">ชื่อสินค้า</th>
                                 <th class="p-3 border">สต็อกทั้งหมด</th>
                                 <th class="p-3 border">ถูกจอง (Reserve)</th>
                                 <th class="p-3 border">คงเหลือพร้อมจ่าย</th>
                                 <th class="p-3 border">จัดการ</th>
+                                <th class="p-3 border">ลบ</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -38,6 +39,17 @@
                                             class="bg-blue-500 hover:bg-blue-700 text-black font-bold py-1 px-3 rounded text-sm">
                                             🖨️ พิมพ์บาร์โค้ด
                                         </a>
+                                    </td>
+                                    <td class="p-3 border text-center">
+                                        <form action="{{ route('inventory.destroy', $product->id) }}" method="POST"
+                                            onsubmit="return confirm('⚠️ คุณแน่ใจใช่ไหมที่จะลบสินค้านี้ออกจากสต็อก?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="text-red-600 hover:text-red-900 transition font-bold">
+                                                ลบรายการ
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                             @endforeach

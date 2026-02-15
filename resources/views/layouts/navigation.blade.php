@@ -24,6 +24,10 @@
                         {{ __('🗺️ แผนผังคลัง') }}
                     </x-nav-link>
 
+                    <x-nav-link :href="route('products.create')" :active="request()->routeIs('products.create')">
+                        {{ __('✨ เพิ่มสินค้าใหม่') }}
+                    </x-nav-link>
+
                     <x-nav-link :href="route('inbound.create')" :active="request()->routeIs('inbound.create')">
                         {{ __('📥 รับของเข้า') }}
                     </x-nav-link>

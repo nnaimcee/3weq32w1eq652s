@@ -52,6 +52,12 @@ Route::get('/products/barcode/{id}', [ProductController::class, 'printBarcode'])
     ->middleware(['auth', 'verified'])
     ->name('products.barcode');
 
+// Routes สำหรับจัดการสินค้า (เพิ่มสินค้าใหม่)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+    Route::post('/products/store', [ProductController::class, 'store'])->name('products.store');
+});
+
 // Routes สำหรับรับของเข้า (Inbound)
 Route::get('/inbound', [InboundController::class, 'create'])->middleware(['auth', 'verified'])->name('inbound.create');
 Route::post('/inbound', [InboundController::class, 'store'])->middleware(['auth', 'verified'])->name('inbound.store');
@@ -73,6 +79,10 @@ Route::get('/transactions', [TransactionController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('transactions.index');
 
+// Route สำหรับลบรายการสต็อก (ใช้ในกรณีที่ต้องการแก้ไขข้อมูลสต็อกที่ผิดพลาด)
+Route::delete('/inventory/{id}', [App\Http\Controllers\InventoryController::class, 'destroy'])
+    ->middleware(['auth'])
+    ->name('inventory.destroy');
 
 
 
