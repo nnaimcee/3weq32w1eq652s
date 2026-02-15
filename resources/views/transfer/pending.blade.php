@@ -10,7 +10,7 @@
                     <p class="text-center text-gray-500">ไม่มีสินค้าค้างอยู่ในพื้นที่ Transit</p>
                 @else
                     <table class="w-full text-left">
-                        <thead>
+                        <thead align="center">
                             <tr class="bg-gray-100">
                                 <th class="p-2">สินค้า</th>
                                 <th class="p-2">จำนวน</th>

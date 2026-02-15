@@ -11,7 +11,7 @@
                 
                 <table class="w-full text-left border-collapse text-sm">
                     <thead>
-                        <tr class="bg-gray-100">
+                        <tr class="bg-gray-100" align="center">
                             <th class="p-3 border">วันที่/เวลา</th>
                             <th class="p-3 border">ประเภท</th>
                             <th class="p-3 border">สินค้า</th>
@@ -21,7 +21,7 @@
                             <th class="p-3 border">ผู้ทำรายการ</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody align="center">
                         @foreach($transactions as $trx)
                         <tr class="hover:bg-gray-50 border-b">
                             <td class="p-3 border">{{ $trx->created_at->format('d/m/Y H:i') }}</td>

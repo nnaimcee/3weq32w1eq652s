@@ -56,18 +56,25 @@ class ProductController extends Controller
     public function getByBarcode($barcode)
     {
         // ค้นหาสินค้าจากเลขบาร์โค้ด
-        $product = \App\Models\Product::where('barcode', $barcode)->first();
+        $product = \App\Models\Product::where('barcode', $barcode)
+        ->withSum('stocks', 'quantity') 
+        ->first();
 
         if ($product) {
-            return response()->json([
-                'success' => true,
-                'product' => $product
-            ]);
-        }
+        return response()->json([
+            'success' => true,
+            'product' => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'sku' => $product->sku,
+                'total_stock' => $product->stocks_sum_quantity ?? 0 // ยอดคงเหลือรวม
+            ]
+        ]);
+    }
 
         return response()->json([
             'success' => false,
-            'message' => 'ไม่พบข้อมูลสินค้า'
+            'message' => 'ไม่พบข้อมูลสินค้าในระบบ'
         ]);
     }
 }
