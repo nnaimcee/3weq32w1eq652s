@@ -11,6 +11,7 @@ use App\Http\Controllers\InboundController;
 use App\Http\Controllers\OutboundController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\LocationController;
 
 // --- IGNORE --- (ส่วนนี้เป็นโค้ดที่ Laravel สร้างมาให้แล้ว ไม่ต้องแก้ไข)
 Route::get('/dashboard', function () {
@@ -90,6 +91,9 @@ Route::delete('/inventory/{id}', [App\Http\Controllers\InventoryController::clas
 // API Route สำหรับดึงข้อมูลสินค้าโดยใช้บาร์โค้ด (ใช้ในฟอร์มรับของเข้า)
 Route::get('/api/products/{barcode}', [App\Http\Controllers\ProductController::class, 'getByBarcode'])
     ->middleware(['auth']);
+
+// API Route สำหรับดึงข้อมูลสินค้าที่อยู่ใน Location ที่ถูกคลิก (ใช้ในแผนที่คลังสินค้า)
+Route::get('/api/locations/{id}/items', [App\Http\Controllers\LocationController::class, 'getItems']);
 
 
 // --- IGNORE --- (ส่วนนี้เป็นโค้ดที่ Laravel สร้างมาให้แล้ว ไม่ต้องแก้ไข)

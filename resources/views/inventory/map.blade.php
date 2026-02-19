@@ -8,7 +8,7 @@
         </h2>
     </x-slot>
 
-    <div class="min-h-screen bg-gray-100 py-12">
+    <div class="min-h-screen bg-gray-100 py-12 relative">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
             <div class="bg-white p-6 rounded-2xl shadow-lg mb-8 flex flex-wrap justify-center gap-6 border border-gray-200">
@@ -39,23 +39,19 @@
                             $totalQty = $loc->stocks->sum('quantity');
                             $totalReserved = $loc->stocks->sum('reserved_qty');
                             
-                            // กำหนดชุดสีใหม่ (ที่ดู Modern และเข้ากันมากขึ้น)
-                            // Default: Empty (เขียวมิ้นต์อ่อน)
                             $cardClasses = 'bg-green-50 border-green-300 text-green-900 hover:bg-green-100 hover:border-green-400';
                             $dotColor = 'bg-green-500';
 
                             if ($totalQty > 0) {
-                                // Occupied (น้ำเงินเข้ม)
                                 $cardClasses = 'bg-blue-100 border-blue-300 text-blue-900 hover:bg-blue-200 hover:border-blue-400';
                                 $dotColor = 'bg-blue-600';
                             } elseif ($totalReserved > 0) {
-                                // Reserved (เหลืองทอง)
                                 $cardClasses = 'bg-yellow-50 border-yellow-300 text-yellow-900 hover:bg-yellow-100 hover:border-yellow-400';
                                 $dotColor = 'bg-yellow-500';
                             }
                         @endphp
 
-                        <div class="relative group rounded-2xl p-5 shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-2 {{ $cardClasses }} flex flex-col items-center justify-center h-36 cursor-pointer overflow-hidden">
+                        <div onclick="openLocationPopup({{ $loc->id }}, '{{ addslashes($loc->name) }}')" class="relative group rounded-2xl p-5 shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-2 {{ $cardClasses }} flex flex-col items-center justify-center h-36 cursor-pointer overflow-hidden">
                             
                             <span class="absolute top-3 right-3 w-3 h-3 rounded-full {{ $dotColor }} shadow-sm"></span>
 
@@ -67,7 +63,7 @@
                                 <div class="space-y-1">
                                     <div class="flex justify-between"><span>📦 สินค้า:</span> <span class="font-bold text-green-400">{{ number_format($totalQty) }}</span></div>
                                     <div class="flex justify-between"><span>🏷️ จองแล้ว:</span> <span class="font-bold text-yellow-400">{{ number_format($totalReserved) }}</span></div>
-                                    <div class="flex justify-between pt-1 border-t border-gray-700 mt-1"><span>สถานะ:</span> <span class="capitalize">{{ $loc->status }}</span></div>
+                                    <div class="flex justify-between pt-1 border-t border-gray-700 mt-1"><span>สถานะ:</span> <span class="capitalize">{{ $loc->status ?? 'Active' }}</span></div>
                                 </div>
                                 <svg class="absolute text-gray-900 h-3 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255" xml:space="preserve"><polygon class="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
                             </div>
@@ -79,4 +75,111 @@
 
         </div>
     </div>
+
+    <div id="locationModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 z-50 flex justify-center items-center backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 max-h-[85vh] flex flex-col transform transition-all">
+            
+            <div class="p-5 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl">📍</span>
+                    <h3 class="text-xl font-bold text-gray-800">รายการสินค้าในพื้นที่: <span id="modalTitleName" class="text-blue-600">...</span></h3>
+                </div>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-red-500 font-bold text-3xl leading-none transition">&times;</button>
+            </div>
+
+            <div class="p-6 overflow-y-auto bg-white flex-1">
+                
+                <div id="loadingIndicator" class="text-center py-10 hidden">
+                    <svg class="animate-spin h-10 w-10 text-blue-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="text-gray-500 font-medium animate-pulse">กำลังค้นหาข้อมูลสินค้า...</p>
+                </div>
+
+                <div id="emptyMessage" class="text-center py-10 hidden">
+                    <span class="text-5xl block mb-4">🪹</span>
+                    <h4 class="text-lg font-bold text-gray-700">ไม่มีสินค้าในพื้นที่นี้</h4>
+                    <p class="text-gray-500 text-sm mt-1">พื้นที่นี้พร้อมสำหรับจัดเก็บสินค้าใหม่</p>
+                </div>
+
+                <div id="itemsTableContainer" class="hidden rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-gray-100 text-gray-700">
+                            <tr>
+                                <th class="p-4 font-semibold">SKU</th>
+                                <th class="p-4 font-semibold">ชื่อสินค้า</th>
+                                <th class="p-4 font-semibold text-center">คงเหลือ (Qty)</th>
+                                <th class="p-4 font-semibold text-center">ถูกจอง (Reserved)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsTableBody" class="divide-y divide-gray-100">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="p-4 border-t text-right bg-gray-50 rounded-b-2xl">
+                <button onclick="closeModal()" class="bg-gray-800 hover:bg-black text-white px-8 py-2.5 rounded-xl font-medium transition shadow-md">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openLocationPopup(locationId, locationName) {
+            // เปิดหน้าต่างและตั้งชื่อ
+            document.getElementById('locationModal').classList.remove('hidden');
+            document.getElementById('modalTitleName').innerText = locationName;
+            
+            // สลับสถานะ UI
+            document.getElementById('itemsTableContainer').classList.add('hidden');
+            document.getElementById('emptyMessage').classList.add('hidden');
+            document.getElementById('loadingIndicator').classList.remove('hidden');
+            document.getElementById('itemsTableBody').innerHTML = '';
+
+            // ⚠️ ต้องมี API Route เพื่อดึงข้อมูลนี้นะครับ
+            fetch(`/api/locations/${locationId}/items`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loadingIndicator').classList.add('hidden');
+
+                    if (data.items.length === 0) {
+                        document.getElementById('emptyMessage').classList.remove('hidden');
+                    } else {
+                        document.getElementById('itemsTableContainer').classList.remove('hidden');
+                        
+                        let html = '';
+                        data.items.forEach(item => {
+                            html += `
+                                <tr class="hover:bg-blue-50 transition">
+                                    <td class="p-4 font-mono text-xs text-gray-600">${item.sku}</td>
+                                    <td class="p-4 font-medium text-gray-900">${item.product_name}</td>
+                                    <td class="p-4 text-center">
+                                        <span class="bg-green-100 text-green-800 font-bold px-3 py-1 rounded-full">${item.quantity}</span>
+                                    </td>
+                                    <td class="p-4 text-center text-yellow-600 font-semibold">${item.reserved}</td>
+                                </tr>
+                            `;
+                        });
+                        document.getElementById('itemsTableBody').innerHTML = html;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    document.getElementById('loadingIndicator').classList.add('hidden');
+                    alert('ไม่สามารถดึงข้อมูลได้ โปรดลองอีกครั้ง');
+                });
+        }
+
+        function closeModal() {
+            document.getElementById('locationModal').classList.add('hidden');
+        }
+
+        // ปิด Modal เมื่อคลิกพื้นที่สีดำรอบนอก
+        document.getElementById('locationModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
 </x-app-layout>
