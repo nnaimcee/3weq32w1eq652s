@@ -92,6 +92,15 @@ Route::delete('/inventory/{id}', [App\Http\Controllers\InventoryController::clas
 Route::get('/api/products/{barcode}', [App\Http\Controllers\ProductController::class, 'getByBarcode'])
     ->middleware(['auth']);
 
+// Routes สำหรับจัดการการจองสินค้า (Reservation)
+Route::post('/reservation/reserve', [App\Http\Controllers\ReservationController::class, 'reserve'])
+    ->middleware(['auth'])
+    ->name('reservation.reserve');
+
+Route::post('/reservation/release', [App\Http\Controllers\ReservationController::class, 'release'])
+    ->middleware(['auth'])
+    ->name('reservation.release');
+
 // API Route สำหรับดึงข้อมูลสินค้าที่อยู่ใน Location ที่ถูกคลิก (ใช้ในแผนที่คลังสินค้า)
 Route::get('/api/locations/{id}/items', [App\Http\Controllers\LocationController::class, 'getItems']);
 

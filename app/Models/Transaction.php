@@ -19,6 +19,7 @@ class Transaction extends Model
         'type',
         'status',
         'ref_doc_no',
+        'notes',
     ];
 
     // เชื่อมไปหาคนทำรายการ

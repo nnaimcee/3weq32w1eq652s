@@ -31,6 +31,10 @@
                                         <span class="text-green-600 font-bold">● รับเข้า (IN)</span>
                                     @elseif($trx->type == 'OUT')
                                         <span class="text-red-600 font-bold">● เบิกออก (OUT)</span>
+                                    @elseif($trx->type == 'RESERVE')
+                                        <span class="text-yellow-600 font-bold">● จองสินค้า (RESERVE)</span>
+                                    @elseif($trx->type == 'RELEASE')
+                                        <span class="text-indigo-600 font-bold">● ปลดจอง (RELEASE)</span>
                                     @else
                                         <span class="text-blue-600 font-bold">● ย้ายของ (TRANSFER)</span>
                                     @endif

@@ -56,14 +56,21 @@
                                             </div>
                                         </td>
                                         <td class="p-3 border text-center">
-                                            <form action="{{ route('inventory.destroy', $product->id) }}" method="POST"
-                                                onsubmit="return confirm('⚠️ คุณแน่ใจใช่ไหมที่จะลบสินค้านี้?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900 transition font-bold">
-                                                    ลบรายการ
+                                            <div class="flex flex-col gap-2">
+                                                <button onclick="openReservationModal('{{ $product->id }}', '{{ addslashes($product->name) }}', {{ $product->stocks_sum_quantity ?? 0 }}, {{ $product->stocks_sum_reserved_qty ?? 0 }})"
+                                                    class="bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-3 rounded text-xs font-bold shadow-sm transition">
+                                                    🔒 จอง/ปลด
                                                 </button>
-                                            </form>
+
+                                                <form action="{{ route('inventory.destroy', $product->id) }}" method="POST"
+                                                    onsubmit="return confirm('⚠️ คุณแน่ใจใช่ไหมที่จะลบสินค้านี้?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-red-600 hover:text-red-900 transition text-xs font-bold">
+                                                        ลบรายการ
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -74,7 +81,93 @@
         </div>
     </div>
 
+    <!-- Reservation Modal -->
+    <div id="reservationModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 z-50 flex justify-center items-center backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-11/12 md:w-1/3 p-6 transform transition-all">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="text-xl font-bold text-gray-800">จัดการการจอง: <span id="resModalName" class="text-blue-600">...</span></h3>
+                <button onclick="closeReservationModal()" class="text-gray-400 hover:text-red-500 font-bold text-2xl leading-none">&times;</button>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-gray-50 p-4 rounded-lg border flex justify-between text-sm">
+                    <div>📦 มีทั้งหมด: <span id="resModalTotal" class="font-bold text-blue-600">0</span></div>
+                    <div>🔒 จองแล้ว: <span id="resModalReserved" class="font-bold text-yellow-600">0</span></div>
+                    <div>✅ ว่าง: <span id="resModalAvailable" class="font-bold text-green-600">0</span></div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex border-b">
+                    <button id="tabReserve" onclick="switchTab('reserve')" class="flex-1 py-2 font-bold text-yellow-600 border-b-2 border-yellow-500 bg-yellow-50">🔒 จองสินค้า (Reserve)</button>
+                    <button id="tabRelease" onclick="switchTab('release')" class="flex-1 py-2 font-bold text-gray-500 hover:text-green-600">🔓 ปลดจอง (Release)</button>
+                </div>
+
+                <!-- Form -->
+                <form id="reservationForm" method="POST" action="{{ route('reservation.reserve') }}">
+                    @csrf
+                    <input type="hidden" name="product_id" id="resProductId">
+                    
+                    <div class="mt-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">จำนวน (Qty):</label>
+                        <input type="number" name="quantity" min="1" required
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+
+                    <div class="mt-6 flex justify-end gap-2">
+                        <button type="button" onclick="closeReservationModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            ยกเลิก
+                        </button>
+                        <button type="submit" id="resSubmitBtn" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            ยืนยันการจอง
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
+        function openReservationModal(id, name, total, reserved) {
+            document.getElementById('reservationModal').classList.remove('hidden');
+            
+            document.getElementById('resProductId').value = id;
+            document.getElementById('resModalName').innerText = name;
+            
+            document.getElementById('resModalTotal').innerText = total;
+            document.getElementById('resModalReserved').innerText = reserved;
+            document.getElementById('resModalAvailable').innerText = total - reserved;
+
+            // default tab
+            switchTab('reserve');
+        }
+
+        function closeReservationModal() {
+            document.getElementById('reservationModal').classList.add('hidden');
+        }
+
+        function switchTab(type) {
+            const form = document.getElementById('reservationForm');
+            const btn = document.getElementById('resSubmitBtn');
+            const tabReserve = document.getElementById('tabReserve');
+            const tabRelease = document.getElementById('tabRelease');
+
+            if (type === 'reserve') {
+                form.action = "{{ route('reservation.reserve') }}";
+                btn.innerText = "ยืนยันการจอง";
+                btn.className = "bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded";
+                
+                tabReserve.className = "flex-1 py-2 font-bold text-yellow-600 border-b-2 border-yellow-500 bg-yellow-50";
+                tabRelease.className = "flex-1 py-2 font-bold text-gray-500 hover:text-green-600";
+            } else {
+                form.action = "{{ route('reservation.release') }}";
+                btn.innerText = "ยืนยันการปลดจอง";
+                btn.className = "bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded";
+
+                tabReserve.className = "flex-1 py-2 font-bold text-gray-500 hover:text-yellow-600";
+                tabRelease.className = "flex-1 py-2 font-bold text-green-600 border-b-2 border-green-500 bg-green-50";
+            }
+        }
+
         function printStickerDirect(name, sku, productId) {
             // 1. ดึง Source (URL) ของรูปภาพจากหน้าเว็บ
             const imgElement = document.getElementById(`barcode-img-${productId}`);

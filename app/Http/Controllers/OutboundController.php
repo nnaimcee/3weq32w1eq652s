@@ -30,10 +30,14 @@ class OutboundController extends Controller
         $requestedQty = $request->quantity;
 
         // 1. เช็คก่อนว่ามีสต็อกรวมพอให้เบิกไหม?
+        // ต้องหักลบจำนวนที่ถูกจอง (reserved_qty) ออกด้วย
         $totalStock = Stock::where('product_id', $product->id)->sum('quantity');
+        $totalReserved = Stock::where('product_id', $product->id)->sum('reserved_qty');
         
-        if ($totalStock < $requestedQty) {
-            return back()->withErrors(['สินค้ามีไม่พอให้เบิก! (ปัจจุบันมีเหลือแค่ ' . $totalStock . ' ชิ้น)']);
+        $availableStock = $totalStock - $totalReserved;
+
+        if ($availableStock < $requestedQty) {
+            return back()->withErrors(['สินค้ามีไม่พอให้เบิก! (เหลือพร้อมเบิก ' . $availableStock . ' ชิ้น | จองไว้ ' . $totalReserved . ' ชิ้น)']);
         }
 
         // 2. เริ่มกระบวนการตัดสต็อกแบบ FIFO
