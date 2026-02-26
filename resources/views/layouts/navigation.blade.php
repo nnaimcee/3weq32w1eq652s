@@ -53,6 +53,7 @@
                             <x-dropdown-link :href="route('inbound.create')">📥 รับของเข้า</x-dropdown-link>
                             <x-dropdown-link :href="route('outbound.create')">📤 เบิกของออก</x-dropdown-link>
                             <x-dropdown-link :href="route('transfer.create')">🚚 ย้ายตำแหน่ง</x-dropdown-link>
+                            <x-dropdown-link :href="route('scanner.index')">📷 สแกนด้วยกล้อง</x-dropdown-link>
                         </x-slot>
                     </x-dropdown>
 
@@ -107,6 +108,7 @@
             <x-responsive-nav-link :href="route('inbound.create')">รับของเข้า</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('outbound.create')">เบิกของออก</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('transfer.create')">ย้ายตำแหน่ง</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('scanner.index')">📷 สแกนด้วยกล้อง</x-responsive-nav-link>
 
             <div class="pt-4 pb-1 border-t border-gray-200">
                 <x-responsive-nav-link :href="route('transactions.index')" :active="request()->routeIs('transactions.index')">📜 ประวัติธุรกรรม</x-responsive-nav-link>

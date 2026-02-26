@@ -12,6 +12,7 @@ use App\Http\Controllers\OutboundController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\LocationController;
+use App\Http\Controllers\ScannerController;
 
 // --- IGNORE --- (ส่วนนี้เป็นโค้ดที่ Laravel สร้างมาให้แล้ว ไม่ต้องแก้ไข)
 Route::get('/dashboard', function () {
@@ -61,6 +62,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/products/store', [ProductController::class, 'store'])->name('products.store');
     Route::get('/products/{id}/print', [ProductController::class, 'printBarcode'])->name('products.print_barcode');
     Route::get('/products/{id}/qrcode', [ProductController::class, 'printQrCode'])->name('products.print_qrcode');
+    Route::get('/scanner', [ScannerController::class, 'index'])->name('scanner.index');
 });
 
 // Routes สำหรับรับของเข้า (Inbound)

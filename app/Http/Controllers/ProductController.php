@@ -84,7 +84,8 @@ class ProductController extends Controller
     {
         // ค้นหาสินค้าจากเลขบาร์โค้ด
         $product = \App\Models\Product::where('barcode', $barcode)
-            ->withSum('stocks', 'quantity') 
+            ->withSum('stocks', 'quantity')
+            ->withSum('stocks', 'reserved_qty')
             ->first();
 
         if ($product) {
@@ -94,7 +95,8 @@ class ProductController extends Controller
                     'id' => $product->id,
                     'name' => $product->name,
                     'sku' => $product->sku,
-                    'total_stock' => $product->stocks_sum_quantity ?? 0 // ยอดคงเหลือรวม
+                    'total_stock' => $product->stocks_sum_quantity ?? 0,
+                    'reserved' => $product->stocks_sum_reserved_qty ?? 0,
                 ]
             ]);
         }
