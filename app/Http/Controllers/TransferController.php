@@ -158,10 +158,11 @@ class TransferController extends Controller
                         ->first();
 
             if ($transaction) {
+                $userName = auth()->user()->name ?? 'System';
                 $transaction->update([
                     'status' => 'completed',
                     'to_location_id' => $request->to_location_id,
-                    'notes' => '✅ รับของเรียบร้อย → ' . Location::find($request->to_location_id)->name,
+                    'notes' => '✅ รับของเรียบร้อย → ' . Location::find($request->to_location_id)->name . ' (รับโดย: ' . $userName . ')',
                 ]);
             }
         });
