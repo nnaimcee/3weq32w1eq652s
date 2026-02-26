@@ -17,15 +17,17 @@ use App\Http\Controllers\ScannerController;
 // --- IGNORE --- (ส่วนนี้เป็นโค้ดที่ Laravel สร้างมาให้แล้ว ไม่ต้องแก้ไข)
 Route::get('/dashboard', function () {
     $transitLocationIds = \App\Models\Location::where('type', 'transit')->pluck('id');
+    $inactiveLocationIds = \App\Models\Location::where('status', 'inactive')->pluck('id');
+    $excludeLocationIds = $transitLocationIds->merge($inactiveLocationIds)->unique();
 
     // 1. จำนวนสินค้าทั้งหมด
     $totalProducts = Product::count();
 
-    // 2. สต็อกในคลัง (ไม่นับ transit)
-    $totalStock = Stock::whereNotIn('location_id', $transitLocationIds)->sum('quantity');
+    // 2. สต็อกในคลัง (ไม่นับ transit + inactive)
+    $totalStock = Stock::whereNotIn('location_id', $excludeLocationIds)->sum('quantity');
 
     // 3. จำนวนจอง
-    $totalReserved = Stock::whereNotIn('location_id', $transitLocationIds)->sum('reserved_qty');
+    $totalReserved = Stock::whereNotIn('location_id', $excludeLocationIds)->sum('reserved_qty');
 
     // 4. ระหว่างทาง
     $totalTransit = Stock::whereIn('location_id', $transitLocationIds)->sum('quantity');
@@ -33,14 +35,14 @@ Route::get('/dashboard', function () {
     // 5. พร้อมจ่าย
     $totalAvailable = $totalStock - $totalReserved;
 
-    // 6. จำนวนตำแหน่งทั้งหมด
-    $totalLocations = \App\Models\Location::where('type', 'storage')->count();
+    // 6. จำนวนตำแหน่งทั้งหมด (active storage only)
+    $totalLocations = \App\Models\Location::where('type', 'storage')->where('status', 'active')->count();
 
     // 7. สินค้า Low Stock
     // - ถ้าสินค้าสต็อก = 0 → แสดง Low Stock เสมอ (หมด)
     // - ถ้าสินค้าสต็อก <= min_stock (เมื่อ min_stock > 0) → แสดง Low Stock (ใกล้หมด)
-    $allProducts = Product::withSum(['stocks as stocks_sum_quantity' => function($q) use ($transitLocationIds) {
-            $q->whereNotIn('location_id', $transitLocationIds);
+    $allProducts = Product::withSum(['stocks as stocks_sum_quantity' => function($q) use ($excludeLocationIds) {
+            $q->whereNotIn('location_id', $excludeLocationIds);
         }], 'quantity')
         ->get();
 

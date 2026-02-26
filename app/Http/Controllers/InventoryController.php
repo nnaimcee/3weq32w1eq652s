@@ -10,20 +10,24 @@ class InventoryController extends Controller
 {
     public function index()
     {
-        // ดึง transit location IDs เพื่อ exclude จากยอดพร้อมจ่าย
+        // ดึง transit + inactive location IDs เพื่อ exclude จากยอดพร้อมจ่าย
         $transitLocationIds = \App\Models\Location::where('type', 'transit')->pluck('id');
+        $inactiveLocationIds = \App\Models\Location::where('status', 'inactive')->pluck('id');
+        $excludeLocationIds = $transitLocationIds->merge($inactiveLocationIds)->unique();
 
-        $products = Product::withSum(['stocks as stocks_sum_quantity' => function($q) use ($transitLocationIds) {
-                $q->whereNotIn('location_id', $transitLocationIds);
+        $products = Product::withSum(['stocks as stocks_sum_quantity' => function($q) use ($excludeLocationIds) {
+                $q->whereNotIn('location_id', $excludeLocationIds);
             }], 'quantity')
-            ->withSum(['stocks as stocks_sum_reserved_qty' => function($q) use ($transitLocationIds) {
-                $q->whereNotIn('location_id', $transitLocationIds);
+            ->withSum(['stocks as stocks_sum_reserved_qty' => function($q) use ($excludeLocationIds) {
+                $q->whereNotIn('location_id', $excludeLocationIds);
             }], 'reserved_qty')
             ->withSum(['stocks as transit_quantity' => function($q) use ($transitLocationIds) {
                 $q->whereIn('location_id', $transitLocationIds);
             }], 'quantity')
-            ->with(['stocks' => function($q) {
-                $q->where('quantity', '>', 0)->with('location')->orderBy('received_date', 'asc');
+            ->with(['stocks' => function($q) use ($inactiveLocationIds) {
+                $q->where('quantity', '>', 0)
+                  ->whereNotIn('location_id', $inactiveLocationIds)
+                  ->with('location')->orderBy('received_date', 'asc');
             }])
             ->get();
 
