@@ -115,6 +115,13 @@
                     </div>
 
                     <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Lot Number (ถ้ามี):</label>
+                        <input type="text" name="lot_number"
+                            class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 focus:outline-none focus:border-blue-500"
+                            placeholder="ระบุ Lot ID (ปล่อยว่างระบบจะสร้างให้)">
+                    </div>
+
+                    <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2">ตำแหน่งจัดเก็บ (Location):</label>
                         <select name="location_id" required
                             class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 focus:outline-none focus:border-blue-500">

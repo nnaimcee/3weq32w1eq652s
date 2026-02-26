@@ -59,6 +59,13 @@
                                placeholder="ระบุจำนวน">
                     </div>
 
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Lot Number / Lot ID (เลือกระบุ):</label>
+                        <input type="text" name="lot_number" id="lot_number"
+                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-500" 
+                               placeholder="ถ้าไม่ระบุ ระบบจะสร้างอัตโนมัติ (เช่น INB-20240101-120000)">
+                    </div>
+
                     <div class="mb-6">
                         <label class="block text-gray-700 text-sm font-bold mb-2">เลือกตำแหน่งจัดเก็บ (Location):</label>
                         <select name="location_id" required class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">

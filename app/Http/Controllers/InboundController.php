@@ -27,6 +27,7 @@ class InboundController extends Controller
             'barcode' => 'required|exists:products,barcode', // บาร์โค้ดต้องมีในระบบ
             'quantity' => 'required|integer|min:1',
             'location_id' => 'required|exists:locations,id',
+            'lot_number' => 'nullable|string|max:50', // เพิ่มการรองรับ Lot ID (nullable)
         ], [
             'barcode.exists' => 'ไม่พบสินค้านี้ในระบบ กรุณาตรวจสอบบาร์โค้ดอีกครั้ง'
         ]);
@@ -34,8 +35,11 @@ class InboundController extends Controller
         // 2. หาสินค้าจากบาร์โค้ด
         $product = Product::where('barcode', $request->barcode)->first();
 
+        // สร้าง Lot Number อัตโนมัติถ้าไม่ได้กรอกมา (รูปแบบ INB-YYYYMMDD-HHMMSS)
+        $lotNumber = $request->lot_number ?: 'INB-' . now()->format('Ymd-His');
+
         // 3. เริ่มบันทึกข้อมูล (ใช้ DB::transaction เพื่อความปลอดภัย ถ้าบันทึกพังตรงไหน มันจะยกเลิกให้ทั้งหมด)
-        DB::transaction(function () use ($request, $product) {
+        DB::transaction(function () use ($request, $product, $lotNumber) {
             
             // --> A. สร้างล็อตใหม่ลงตาราง Stocks (เพิ่มแถวใหม่เสมอเพื่อเก็บเวลา FIFO)
             Stock::create([
@@ -43,6 +47,7 @@ class InboundController extends Controller
                 'location_id' => $request->location_id,
                 'quantity' => $request->quantity,
                 'reserved_qty' => 0,
+                'lot_number' => $lotNumber, // บันทึก Lot Number ลง Stock
                 'received_date' => now(), // สำคัญที่สุด! เก็บเวลาปัจจุบันเพื่อใช้ทำ FIFO
             ]);
 
@@ -53,11 +58,12 @@ class InboundController extends Controller
                 'to_location_id' => $request->location_id,
                 'quantity' => $request->quantity,
                 'type' => 'IN',
+                'lot_number' => $lotNumber, // บันทึก Lot Number ลง Transaction ด้วย
             ]);
             
         });
 
         // 4. บันทึกเสร็จแล้ว เด้งกลับมาหน้าเดิมพร้อมข้อความสำเร็จ
-        return redirect()->back()->with('success', '✅ รับสินค้าเข้าคลังเรียบร้อยแล้ว!');
+        return redirect()->back()->with('success', "✅ รับสินค้าเข้าคลังเรียบร้อยแล้ว (Lot: {$lotNumber})!");
     }
 }
