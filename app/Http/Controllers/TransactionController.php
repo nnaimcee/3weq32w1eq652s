@@ -7,13 +7,16 @@ use App\Models\Transaction;
 
 class TransactionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // ดึงข้อมูลประวัติทั้งหมด เรียงจากใหม่ล่าสุดไปเก่าสุด
-        // ใช้ with เพื่อดึงข้อมูลตารางที่เกี่ยวข้องมารวดเดียว (Eager Loading)
-        $transactions = Transaction::with(['user', 'product', 'fromLocation', 'toLocation'])
-            ->latest()
-            ->paginate(15); // แบ่งหน้าละ 15 รายการ
+        $query = Transaction::with(['user', 'product', 'fromLocation', 'toLocation'])
+            ->latest();
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        $transactions = $query->paginate(20);
 
         return view('transactions.index', compact('transactions'));
     }
