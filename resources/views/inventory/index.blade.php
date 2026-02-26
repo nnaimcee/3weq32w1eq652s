@@ -39,7 +39,40 @@
                 </div>
             </div>
 
+            {{-- Search Bar --}}
+            <div class="mb-6 bg-white p-4 rounded-xl shadow border border-gray-200">
+                <form action="{{ route('inventory.index') }}" method="GET" class="flex flex-col sm:flex-row gap-3">
+                    <div class="flex-1 relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500">🔍</span>
+                        </div>
+                        <input type="text" id="searchInput" name="search" value="{{ request('search') }}" placeholder="ค้นหารหัสสินค้า (SKU) หรือ ชื่อสินค้า..." onkeyup="filterProducts()" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-6 rounded-lg shadow transition w-full sm:w-auto text-sm">
+                            ค้นหา
+                        </button>
+                        @if(request('search'))
+                            <a href="{{ route('inventory.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg shadow transition flex items-center justify-center w-full sm:w-auto text-sm">
+                                ล้าง
+                            </a>
+                        @endif
+                    </div>
+                </form>
+            </div>
+
             {{-- Product Cards --}}
+            @if($products->isEmpty())
+                <div class="php-empty-msg bg-white rounded-2xl shadow-md p-8 text-center border border-gray-200 mb-4">
+                    <p class="text-gray-500 py-4 font-bold text-lg">❌ ไม่พบสินค้าที่ค้นหา</p>
+                </div>
+            @endif
+
+            {{-- Message when client-side search finds no results --}}
+            <div id="emptySearchMessage" class="bg-white rounded-2xl shadow-md p-8 text-center border border-gray-200 mb-4" style="display: none;">
+                <p class="text-gray-500 py-4 font-bold text-lg">❌ ไม่พบสินค้าที่ค้นหา</p>
+            </div>
+
             @foreach ($products as $product)
             @php
                 $qty = $product->stocks_sum_quantity ?? 0;
@@ -50,7 +83,7 @@
                 $transitStocks = $product->stocks->filter(fn($s) => $transitLocationIds->contains($s->location_id));
                 $locationGroups = $storageStocks->groupBy(fn($s) => $s->location ? $s->location->name : 'ไม่ทราบ');
             @endphp
-            <div class="bg-white rounded-2xl shadow-md mb-4 overflow-hidden border border-gray-200">
+            <div class="product-card bg-white rounded-2xl shadow-md mb-4 overflow-hidden border border-gray-200" data-search="{{ mb_strtolower($product->sku . ' ' . $product->name) }}">
                 {{-- Product Header Row --}}
                 <div class="p-4 flex flex-wrap items-center justify-between gap-4 cursor-pointer hover:bg-gray-50 transition"
                      onclick="toggleDetail('detail-{{ $product->id }}')">
@@ -399,5 +432,31 @@
         document.getElementById('reservationModal').addEventListener('click', function(e) {
             if (e.target === this) closeReservationModal();
         });
+
+        // Dynamic Filtering
+        function filterProducts() {
+            let filter = document.getElementById('searchInput').value.toLowerCase();
+            let cards = document.querySelectorAll('.product-card');
+            let hasVisible = false;
+
+            cards.forEach(card => {
+                let searchableText = card.getAttribute('data-search');
+                if (searchableText.includes(filter)) {
+                    card.style.display = '';
+                    hasVisible = true;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            let emptyMessage = document.getElementById('emptySearchMessage');
+            let phpEmptyMsg = document.querySelector('.php-empty-msg');
+            
+            if (emptyMessage && !phpEmptyMsg) {
+                if (cards.length > 0) {
+                    emptyMessage.style.display = hasVisible ? 'none' : 'block';
+                }
+            }
+        }
     </script>
 </x-app-layout>
