@@ -16,27 +16,60 @@ use App\Http\Controllers\ScannerController;
 
 // --- IGNORE --- (ส่วนนี้เป็นโค้ดที่ Laravel สร้างมาให้แล้ว ไม่ต้องแก้ไข)
 Route::get('/dashboard', function () {
-    // 1. นับจำนวนสินค้าทั้งหมด
-    $totalProducts = Product::count();
-    
-    // 2. รวมจำนวนสต็อกทั้งหมด
-    $totalStock = Stock::sum('quantity');
-    
-    // 3. หาสินค้าที่ของใกล้หมด (ต่ำกว่า min_stock)
-    $lowStockCount = Product::withSum('stocks', 'quantity')
-        ->get()
-        ->filter(function($product) {
-            return $product->stocks_sum_quantity < $product->min_stock;
-        })->count();
+    $transitLocationIds = \App\Models\Location::where('type', 'transit')->pluck('id');
 
-    // 4. ดึงประวัติล่าสุด 5 รายการ
-    $recentActivities = Transaction::with(['product', 'user'])
-        ->latest()
-        ->take(5)
+    // 1. จำนวนสินค้าทั้งหมด
+    $totalProducts = Product::count();
+
+    // 2. สต็อกในคลัง (ไม่นับ transit)
+    $totalStock = Stock::whereNotIn('location_id', $transitLocationIds)->sum('quantity');
+
+    // 3. จำนวนจอง
+    $totalReserved = Stock::whereNotIn('location_id', $transitLocationIds)->sum('reserved_qty');
+
+    // 4. ระหว่างทาง
+    $totalTransit = Stock::whereIn('location_id', $transitLocationIds)->sum('quantity');
+
+    // 5. พร้อมจ่าย
+    $totalAvailable = $totalStock - $totalReserved;
+
+    // 6. จำนวนตำแหน่งทั้งหมด
+    $totalLocations = \App\Models\Location::where('type', 'storage')->count();
+
+    // 7. สินค้า Low Stock
+    // - ถ้าสินค้าสต็อก = 0 → แสดง Low Stock เสมอ (หมด)
+    // - ถ้าสินค้าสต็อก <= min_stock (เมื่อ min_stock > 0) → แสดง Low Stock (ใกล้หมด)
+    $allProducts = Product::withSum(['stocks as stocks_sum_quantity' => function($q) use ($transitLocationIds) {
+            $q->whereNotIn('location_id', $transitLocationIds);
+        }], 'quantity')
         ->get();
 
-    // ส่งตัวแปรทั้งหมดไปที่ View ด้วยคำสั่ง compact
-    return view('dashboard', compact('totalProducts', 'totalStock', 'lowStockCount', 'recentActivities'));
+    $lowStockProducts = $allProducts->filter(function($product) {
+        $currentStock = $product->stocks_sum_quantity ?? 0;
+        // สินค้าหมดสต็อก
+        if ($currentStock <= 0) return true;
+        // สินค้าต่ำกว่าขั้นต่ำ
+        if ($product->min_stock > 0 && $currentStock <= $product->min_stock) return true;
+        return false;
+    })->sortBy('stocks_sum_quantity');
+    $lowStockCount = $lowStockProducts->count();
+
+    // 8. กิจกรรมล่าสุด 10 รายการ
+    $recentActivities = Transaction::with(['product', 'user', 'fromLocation', 'toLocation'])
+        ->latest()
+        ->take(10)
+        ->get();
+
+    // 9. Pending transfers
+    $pendingTransfers = Transaction::where('type', 'TRANSFER')
+        ->where('status', 'pending')
+        ->count();
+
+    return view('dashboard', compact(
+        'totalProducts', 'totalStock', 'totalReserved', 'totalTransit',
+        'totalAvailable', 'totalLocations', 'lowStockCount', 'lowStockProducts',
+        'recentActivities', 'pendingTransfers'
+    ));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 

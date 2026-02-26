@@ -5,57 +5,230 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-8">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
-                    <p class="text-sm text-gray-500 uppercase font-bold">สินค้าทั้งหมด (SKUs)</p>
-                    <p class="text-3xl font-bold">{{ $totalProducts }} รายการ</p>
-                </div>
 
-                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
-                    <p class="text-sm text-gray-500 uppercase font-bold">จำนวนสต็อกรวม</p>
-                    <p class="text-3xl font-bold text-green-600">{{ number_format($totalStock) }} ชิ้น</p>
+            {{-- Top Summary Cards --}}
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
+                <div class="bg-white rounded-xl shadow p-4 border-l-4 border-indigo-500">
+                    <p class="text-xs text-gray-500 font-bold">📋 สินค้า</p>
+                    <p class="text-2xl font-black text-indigo-600">{{ $totalProducts }}</p>
+                    <p class="text-xs text-gray-400">รายการ</p>
                 </div>
-
-                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-red-500">
-                    <p class="text-sm text-gray-500 uppercase font-bold">สินค้าที่ต้องเติม (Low Stock)</p>
-                    <p class="text-3xl font-bold text-red-600">{{ $lowStockCount }} รายการ</p>
+                <div class="bg-white rounded-xl shadow p-4 border-l-4 border-blue-500">
+                    <p class="text-xs text-gray-500 font-bold">📦 สต็อกในคลัง</p>
+                    <p class="text-2xl font-black text-blue-600">{{ number_format($totalStock) }}</p>
+                    <p class="text-xs text-gray-400">ชิ้น</p>
+                </div>
+                <div class="bg-white rounded-xl shadow p-4 border-l-4 border-yellow-500">
+                    <p class="text-xs text-gray-500 font-bold">🔒 ถูกจอง</p>
+                    <p class="text-2xl font-black text-yellow-600">{{ number_format($totalReserved) }}</p>
+                    <p class="text-xs text-gray-400">ชิ้น</p>
+                </div>
+                <div class="bg-white rounded-xl shadow p-4 border-l-4 border-green-500">
+                    <p class="text-xs text-gray-500 font-bold">✅ พร้อมจ่าย</p>
+                    <p class="text-2xl font-black text-green-600">{{ number_format($totalAvailable) }}</p>
+                    <p class="text-xs text-gray-400">ชิ้น</p>
+                </div>
+                <div class="bg-white rounded-xl shadow p-4 border-l-4 border-orange-500">
+                    <p class="text-xs text-gray-500 font-bold">🚚 ระหว่างทาง</p>
+                    <p class="text-2xl font-black text-orange-500">{{ number_format($totalTransit) }}</p>
+                    <p class="text-xs text-gray-400">ชิ้น</p>
+                </div>
+                <div class="bg-white rounded-xl shadow p-4 border-l-4 border-purple-500">
+                    <p class="text-xs text-gray-500 font-bold">📍 ตำแหน่ง</p>
+                    <p class="text-2xl font-black text-purple-600">{{ $totalLocations }}</p>
+                    <p class="text-xs text-gray-400">ตำแหน่ง</p>
+                </div>
+                <div class="bg-white rounded-xl shadow p-4 border-l-4 {{ $lowStockCount > 0 ? 'border-red-500' : 'border-gray-300' }}">
+                    <p class="text-xs text-gray-500 font-bold">⚠️ Low Stock</p>
+                    <p class="text-2xl font-black {{ $lowStockCount > 0 ? 'text-red-600' : 'text-gray-400' }}">{{ $lowStockCount }}</p>
+                    <p class="text-xs text-gray-400">รายการ</p>
                 </div>
             </div>
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    <h3 class="font-bold text-lg mb-4">🔔 กิจกรรมล่าสุด (Recent Activities)</h3>
-                    <table class="w-full text-center">
-                        <thead>
-                            <tr class="text-gray-400 text-sm border-b">
-                                <th class="pb-3">เวลา</th>
-                                <th class="pb-3">กิจกรรม</th>
-                                <th class="pb-3">สินค้า</th>
-                                <th class="pb-3">จำนวน</th>
-                                <th class="pb-3">ผู้ทำรายการ</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-sm">
-                            @foreach($recentActivities as $activity)
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="py-3 text-gray-500">{{ $activity->created_at->diffForHumans() }}</td>
-                                <td class="py-3">
-                                    <span class="px-2 py-1 rounded text-xs font-bold {{ $activity->type == 'IN' ? 'bg-green-100 text-green-700' : ($activity->type == 'OUT' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700') }}">
-                                        {{ $activity->type }}
-                                    </span>
-                                </td>
-                                <td class="py-3 font-semibold">{{ $activity->product->name }}</td>
-                                <td class="py-3">{{ number_format($activity->quantity) }}</td>
-                                <td class="py-3 text-gray-600">{{ $activity->user->name ?? 'System' }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                    <div class="mt-4 text-right">
-                        <a href="{{ route('transactions.index') }}" class="text-blue-500 hover:underline text-sm">ดูประวัติทั้งหมด &rarr;</a>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {{-- Left Column: Low Stock + Pending Transfers --}}
+                <div class="lg:col-span-1 space-y-6">
+                    {{-- Low Stock Alert --}}
+                    <div class="bg-white rounded-2xl shadow-md overflow-hidden {{ $lowStockCount > 0 ? 'border-2 border-red-200' : '' }}">
+                        <div class="p-4 border-b {{ $lowStockCount > 0 ? 'bg-red-50' : 'bg-gray-50' }}">
+                            <h3 class="font-bold text-gray-700 flex items-center gap-2">
+                                ⚠️ สินค้าใกล้หมด (Low Stock)
+                                @if($lowStockCount > 0)
+                                    <span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">{{ $lowStockCount }}</span>
+                                @endif
+                            </h3>
+                        </div>
+                        <div class="p-4">
+                            @if($lowStockCount > 0)
+                                <div class="space-y-3">
+                                    @foreach($lowStockProducts as $lp)
+                                    @php
+                                        $currentStock = $lp->stocks_sum_quantity ?? 0;
+                                        $minStock = $lp->min_stock > 0 ? $lp->min_stock : 10; // ใช้ 10 เป็น baseline สำหรับ progress bar ถ้า min_stock = 0
+                                        $percentage = round(($currentStock / $minStock) * 100);
+                                        $barColor = $currentStock <= 0 ? 'bg-red-600' : ($percentage <= 25 ? 'bg-red-500' : ($percentage <= 50 ? 'bg-orange-500' : 'bg-yellow-500'));
+                                        $isOutOfStock = $currentStock <= 0;
+                                    @endphp
+                                    <div class="{{ $isOutOfStock ? 'bg-red-100 border-red-300' : 'bg-red-50 border-red-100' }} rounded-xl p-3 border">
+                                        <div class="flex justify-between items-center mb-1">
+                                            <span class="font-bold text-gray-800 text-sm truncate">{{ $lp->name }}</span>
+                                            @if($isOutOfStock)
+                                                <span class="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-bold animate-pulse">หมดสต็อก!</span>
+                                            @else
+                                                <span class="text-xs text-gray-400 font-mono">{{ $lp->sku }}</span>
+                                            @endif
+                                        </div>
+                                        <div class="flex items-center gap-3 text-xs mb-2">
+                                            <span class="text-red-600 font-bold">คงเหลือ: {{ number_format($currentStock) }}</span>
+                                            @if($lp->min_stock > 0)
+                                                <span class="text-gray-400">/</span>
+                                                <span class="text-gray-500">ขั้นต่ำ: {{ number_format($lp->min_stock) }}</span>
+                                            @endif
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div class="{{ $barColor }} h-2 rounded-full transition-all" style="width: {{ min($percentage, 100) }}%"></div>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="text-center py-6">
+                                    <span class="text-4xl block mb-2">✅</span>
+                                    <p class="text-gray-400 font-bold">สินค้าทุกรายการมีจำนวนเพียงพอ</p>
+                                    <p class="text-gray-300 text-xs mt-1">ไม่มีสินค้าที่ต่ำกว่าขั้นต่ำ</p>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Pending Transfers --}}
+                    @if($pendingTransfers > 0)
+                    <div class="bg-white rounded-2xl shadow-md overflow-hidden border-2 border-orange-200">
+                        <div class="p-4 bg-orange-50 border-b">
+                            <h3 class="font-bold text-gray-700 flex items-center gap-2">
+                                🚚 สินค้าระหว่างทาง
+                                <span class="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $pendingTransfers }}</span>
+                            </h3>
+                        </div>
+                        <div class="p-4 text-center">
+                            <p class="text-orange-600 font-bold text-lg">{{ $pendingTransfers }} รายการรอรับเข้า</p>
+                            <a href="{{ route('transfer.pending') }}" class="text-blue-600 hover:text-blue-800 text-sm font-bold mt-2 inline-block">
+                                ดูรายละเอียด →
+                            </a>
+                        </div>
+                    </div>
+                    @endif
+
+                    {{-- Quick Links --}}
+                    <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+                        <div class="p-4 bg-gray-50 border-b">
+                            <h3 class="font-bold text-gray-700">⚡ ทางลัด</h3>
+                        </div>
+                        <div class="p-4 grid grid-cols-2 gap-2">
+                            <a href="{{ route('scanner.index') }}" class="flex items-center gap-2 p-3 rounded-xl bg-blue-50 hover:bg-blue-100 transition text-sm font-bold text-blue-700">
+                                📷 สแกนสินค้า
+                            </a>
+                            <a href="{{ route('products.create') }}" class="flex items-center gap-2 p-3 rounded-xl bg-green-50 hover:bg-green-100 transition text-sm font-bold text-green-700">
+                                ➕ เพิ่มสินค้า
+                            </a>
+                            <a href="{{ route('inventory.index') }}" class="flex items-center gap-2 p-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 transition text-sm font-bold text-indigo-700">
+                                📦 สต็อกสินค้า
+                            </a>
+                            <a href="{{ route('inventory.map') }}" class="flex items-center gap-2 p-3 rounded-xl bg-purple-50 hover:bg-purple-100 transition text-sm font-bold text-purple-700">
+                                🗺️ แผนผังคลัง
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Right Column: Recent Activities --}}
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+                        <div class="p-4 bg-gray-50 border-b flex items-center justify-between">
+                            <h3 class="font-bold text-gray-700 text-lg">🔔 กิจกรรมล่าสุด</h3>
+                            <a href="{{ route('transactions.index') }}" class="text-blue-500 hover:text-blue-700 text-sm font-bold">
+                                ดูทั้งหมด →
+                            </a>
+                        </div>
+                        <div class="divide-y divide-gray-100">
+                            @forelse($recentActivities as $activity)
+                            <div class="p-4 hover:bg-gray-50 transition flex items-center gap-4">
+                                {{-- Type Icon --}}
+                                <div class="flex-shrink-0">
+                                    @switch($activity->type)
+                                        @case('IN')
+                                            <span class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-xl">📥</span>
+                                            @break
+                                        @case('OUT')
+                                            <span class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-xl">📤</span>
+                                            @break
+                                        @case('TRANSFER')
+                                            <span class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-xl">🚚</span>
+                                            @break
+                                        @case('RESERVE')
+                                            <span class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-xl">🔒</span>
+                                            @break
+                                        @case('RELEASE')
+                                            <span class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-xl">🔓</span>
+                                            @break
+                                        @default
+                                            <span class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xl">📋</span>
+                                    @endswitch
+                                </div>
+
+                                {{-- Content --}}
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-0.5">
+                                        @php
+                                            $typeBadge = match($activity->type) {
+                                                'IN' => 'bg-green-100 text-green-700',
+                                                'OUT' => 'bg-red-100 text-red-700',
+                                                'TRANSFER' => 'bg-blue-100 text-blue-700',
+                                                'RESERVE' => 'bg-yellow-100 text-yellow-700',
+                                                'RELEASE' => 'bg-green-100 text-green-600',
+                                                default => 'bg-gray-100 text-gray-700',
+                                            };
+                                            $typeLabel = match($activity->type) {
+                                                'IN' => 'รับเข้า',
+                                                'OUT' => 'เบิกออก',
+                                                'TRANSFER' => 'ย้าย',
+                                                'RESERVE' => 'จอง',
+                                                'RELEASE' => 'ปลดจอง',
+                                                default => $activity->type,
+                                            };
+                                        @endphp
+                                        <span class="px-2 py-0.5 rounded-full text-xs font-bold {{ $typeBadge }}">{{ $typeLabel }}</span>
+                                        <span class="font-bold text-gray-800 truncate">{{ $activity->product->name ?? '-' }}</span>
+                                    </div>
+                                    <div class="text-xs text-gray-400 flex items-center gap-2">
+                                        <span>{{ $activity->quantity }} ชิ้น</span>
+                                        @if($activity->fromLocation)
+                                            <span>จาก {{ $activity->fromLocation->name }}</span>
+                                        @endif
+                                        @if($activity->toLocation)
+                                            <span>→ {{ $activity->toLocation->name }}</span>
+                                        @endif
+                                        @if($activity->status === 'pending')
+                                            <span class="bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full text-[10px] font-bold">รอดำเนินการ</span>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                {{-- Time & User --}}
+                                <div class="flex-shrink-0 text-right">
+                                    <p class="text-xs text-gray-500">{{ $activity->created_at->diffForHumans() }}</p>
+                                    <p class="text-xs text-gray-400">{{ $activity->user->name ?? 'System' }}</p>
+                                </div>
+                            </div>
+                            @empty
+                            <div class="p-8 text-center text-gray-400">
+                                <span class="text-4xl block mb-2">📭</span>
+                                <p class="font-bold">ยังไม่มีกิจกรรม</p>
+                            </div>
+                            @endforelse
+                        </div>
                     </div>
                 </div>
             </div>
