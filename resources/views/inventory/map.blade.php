@@ -1,71 +1,162 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-2xl text-gray-800 leading-tight flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 7m0 13V7m0 0L9 4" />
-            </svg>
-            Warehouse Visual Map
+            🗺️ แผนผังคลังสินค้า (Warehouse Map)
         </h2>
     </x-slot>
 
-    <div class="min-h-screen bg-gray-100 py-12 relative">
+    <div class="min-h-screen bg-gray-100 py-8">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            
-            <div class="bg-white p-6 rounded-2xl shadow-lg mb-8 flex flex-wrap justify-center gap-6 border border-gray-200">
-                <div class="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-full border border-green-200">
-                    <span class="w-4 h-4 rounded-full bg-green-500 shadow-sm"></span>
-                    <span class="font-medium text-green-800">ว่าง (Empty)</span>
+
+            {{-- Summary Bar --}}
+            @php
+                $allLocations = collect();
+                foreach ($zones as $locs) { $allLocations = $allLocations->merge($locs); }
+                $totalLocations = $allLocations->count();
+                $occupied = $allLocations->filter(fn($l) => $l->stocks->sum('quantity') > 0)->count();
+                $reserved = $allLocations->filter(fn($l) => $l->stocks->sum('quantity') == 0 && $l->stocks->sum('reserved_qty') > 0)->count();
+                $empty = $totalLocations - $occupied - $reserved;
+                $totalItems = $allLocations->sum(fn($l) => $l->stocks->sum('quantity'));
+                $totalReserved = $allLocations->sum(fn($l) => $l->stocks->sum('reserved_qty'));
+            @endphp
+
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                <div class="bg-white rounded-xl shadow p-4 border-l-4 border-gray-400">
+                    <p class="text-xs text-gray-500 font-bold">📍 ตำแหน่งทั้งหมด</p>
+                    <p class="text-2xl font-black text-gray-700">{{ $totalLocations }}</p>
                 </div>
-                <div class="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full border border-blue-200">
-                    <span class="w-4 h-4 rounded-full bg-blue-600 shadow-sm"></span>
-                    <span class="font-medium text-blue-800">มีสินค้า (Occupied)</span>
+                <div class="bg-white rounded-xl shadow p-4 border-l-4 border-blue-500">
+                    <p class="text-xs text-gray-500 font-bold">📦 มีสินค้า</p>
+                    <p class="text-2xl font-black text-blue-600">{{ $occupied }}</p>
                 </div>
-                <div class="flex items-center gap-2 bg-yellow-50 px-4 py-2 rounded-full border border-yellow-200">
-                    <span class="w-4 h-4 rounded-full bg-yellow-500 shadow-sm"></span>
-                    <span class="font-medium text-yellow-800">จองพื้นที่ (Reserved)</span>
+                <div class="bg-white rounded-xl shadow p-4 border-l-4 border-green-500">
+                    <p class="text-xs text-gray-500 font-bold">🟢 ว่าง</p>
+                    <p class="text-2xl font-black text-green-600">{{ $empty }}</p>
+                </div>
+                <div class="bg-white rounded-xl shadow p-4 border-l-4 border-yellow-500">
+                    <p class="text-xs text-gray-500 font-bold">🏷️ จองแล้ว</p>
+                    <p class="text-2xl font-black text-yellow-600">{{ number_format($totalReserved) }} ชิ้น</p>
+                </div>
+                <div class="bg-white rounded-xl shadow p-4 border-l-4 border-indigo-500">
+                    <p class="text-xs text-gray-500 font-bold">📊 สินค้ารวม</p>
+                    <p class="text-2xl font-black text-indigo-600">{{ number_format($totalItems) }} ชิ้น</p>
                 </div>
             </div>
 
-            @foreach($zones as $zoneName => $locations)
-            <div class="mb-12">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="bg-indigo-600 w-2 h-10 rounded-full"></div>
-                    <h3 class="text-3xl font-bold text-gray-800">Zone: {{ $zoneName }}</h3>
+            {{-- Legend --}}
+            <div class="bg-white p-4 rounded-xl shadow mb-6 flex flex-wrap justify-center gap-6 border border-gray-200">
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded-full bg-green-500"></span>
+                    <span class="text-sm font-medium text-gray-600">ว่าง (Empty)</span>
                 </div>
-                
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6">
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded-full bg-blue-600"></span>
+                    <span class="text-sm font-medium text-gray-600">มีสินค้า (Occupied)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded-full bg-yellow-500"></span>
+                    <span class="text-sm font-medium text-gray-600">จองพื้นที่ (Reserved)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded-full bg-red-500"></span>
+                    <span class="text-sm font-medium text-gray-600">ปิดใช้งาน (Inactive)</span>
+                </div>
+            </div>
+
+            {{-- Zone Sections --}}
+            @foreach($zones as $zoneName => $locations)
+            @php
+                $zoneQty = $locations->sum(fn($l) => $l->stocks->sum('quantity'));
+                $zoneReserved = $locations->sum(fn($l) => $l->stocks->sum('reserved_qty'));
+                $zoneOccupied = $locations->filter(fn($l) => $l->stocks->sum('quantity') > 0)->count();
+            @endphp
+            <div class="mb-10">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-indigo-600 w-2 h-8 rounded-full"></div>
+                        <h3 class="text-2xl font-bold text-gray-800">Zone: {{ $zoneName }}</h3>
+                        <span class="text-sm text-gray-400">({{ $locations->count() }} ตำแหน่ง)</span>
+                    </div>
+                    <div class="flex gap-4 text-sm text-gray-500">
+                        <span>📦 {{ number_format($zoneQty) }} ชิ้น</span>
+                        <span>🏷️ จอง {{ number_format($zoneReserved) }}</span>
+                        <span>📍 ใช้งาน {{ $zoneOccupied }}/{{ $locations->count() }}</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
                     @foreach($locations as $loc)
                         @php
                             $totalQty = $loc->stocks->sum('quantity');
-                            $totalReserved = $loc->stocks->sum('reserved_qty');
-                            
-                            $cardClasses = 'bg-green-50 border-green-300 text-green-900 hover:bg-green-100 hover:border-green-400';
-                            $dotColor = 'bg-green-500';
+                            $totalReservedLoc = $loc->stocks->sum('reserved_qty');
+                            $availableLoc = $totalQty - $totalReservedLoc;
+                            $productCount = $loc->stocks->where('quantity', '>', 0)->count();
 
-                            if ($totalQty > 0) {
-                                $cardClasses = 'bg-blue-100 border-blue-300 text-blue-900 hover:bg-blue-200 hover:border-blue-400';
+                            if ($loc->status === 'inactive') {
+                                $cardClasses = 'bg-red-50 border-red-300 text-red-900';
+                                $dotColor = 'bg-red-500';
+                                $statusLabel = 'ปิดใช้งาน';
+                            } elseif ($totalQty > 0) {
+                                $cardClasses = 'bg-blue-50 border-blue-300 text-blue-900 hover:bg-blue-100 hover:shadow-xl hover:-translate-y-1';
                                 $dotColor = 'bg-blue-600';
-                            } elseif ($totalReserved > 0) {
-                                $cardClasses = 'bg-yellow-50 border-yellow-300 text-yellow-900 hover:bg-yellow-100 hover:border-yellow-400';
+                                $statusLabel = 'มีสินค้า';
+                            } elseif ($totalReservedLoc > 0) {
+                                $cardClasses = 'bg-yellow-50 border-yellow-300 text-yellow-900 hover:bg-yellow-100 hover:shadow-xl hover:-translate-y-1';
                                 $dotColor = 'bg-yellow-500';
+                                $statusLabel = 'จองอยู่';
+                            } else {
+                                $cardClasses = 'bg-green-50 border-green-300 text-green-900 hover:bg-green-100 hover:shadow-xl hover:-translate-y-1';
+                                $dotColor = 'bg-green-500';
+                                $statusLabel = 'ว่าง';
                             }
                         @endphp
 
-                        <div onclick="openLocationPopup({{ $loc->id }}, '{{ addslashes($loc->name) }}')" class="relative group rounded-2xl p-5 shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-2 {{ $cardClasses }} flex flex-col items-center justify-center h-36 cursor-pointer overflow-hidden">
-                            
-                            <span class="absolute top-3 right-3 w-3 h-3 rounded-full {{ $dotColor }} shadow-sm"></span>
+                        <div onclick="openLocationPopup({{ $loc->id }}, '{{ addslashes($loc->name) }}')"
+                            class="relative group rounded-xl p-4 shadow-md transition-all duration-300 border-2 {{ $cardClasses }} flex flex-col items-center justify-between h-40 cursor-pointer overflow-hidden">
 
-                            <span class="text-xs font-bold uppercase tracking-wider opacity-70 mb-1">Bin: {{ $loc->bin }}</span>
-                            <span class="text-4xl font-extrabold">{{ $loc->shelf }}</span>
-                            
-                            <div class="absolute z-20 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-300 bottom-full mb-3 left-1/2 transform -translate-x-1/2 w-48 bg-gray-900 text-white p-3 rounded-lg shadow-2xl text-sm pointer-events-none">
+                            {{-- Status dot --}}
+                            <span class="absolute top-2 right-2 w-3 h-3 rounded-full {{ $dotColor }} shadow-sm"></span>
+
+                            {{-- Location Info --}}
+                            <div class="text-center">
+                                <span class="text-xs font-bold uppercase tracking-wider opacity-60">{{ $loc->name }}</span>
+                                <div class="text-3xl font-black mt-1">{{ $loc->shelf }}</div>
+                                <span class="text-[10px] opacity-50">Bin: {{ $loc->bin }}</span>
+                            </div>
+
+                            {{-- Bottom Stats --}}
+                            <div class="w-full text-center mt-2">
+                                @if($totalQty > 0)
+                                    <div class="text-xs space-y-0.5">
+                                        <div class="flex justify-between px-1">
+                                            <span class="opacity-60">สินค้า:</span>
+                                            <span class="font-bold">{{ number_format($totalQty) }}</span>
+                                        </div>
+                                        @if($totalReservedLoc > 0)
+                                        <div class="flex justify-between px-1">
+                                            <span class="opacity-60">จอง:</span>
+                                            <span class="font-bold text-yellow-600">{{ number_format($totalReservedLoc) }}</span>
+                                        </div>
+                                        @endif
+                                    </div>
+                                @elseif($totalReservedLoc > 0)
+                                    <span class="text-xs font-bold text-yellow-600">🏷️ จอง {{ number_format($totalReservedLoc) }}</span>
+                                @else
+                                    <span class="text-xs opacity-40">พร้อมใช้งาน</span>
+                                @endif
+                            </div>
+
+                            {{-- Hover Tooltip --}}
+                            <div class="absolute z-20 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 bottom-full mb-3 left-1/2 transform -translate-x-1/2 w-52 bg-gray-900 text-white p-3 rounded-lg shadow-2xl text-sm pointer-events-none">
                                 <div class="font-bold text-base mb-2 border-b border-gray-700 pb-1">{{ $loc->name }}</div>
-                                <div class="space-y-1">
-                                    <div class="flex justify-between"><span>📦 สินค้า:</span> <span class="font-bold text-green-400">{{ number_format($totalQty) }}</span></div>
-                                    <div class="flex justify-between"><span>🏷️ จองแล้ว:</span> <span class="font-bold text-yellow-400">{{ number_format($totalReserved) }}</span></div>
-                                    <div class="flex justify-between pt-1 border-t border-gray-700 mt-1"><span>สถานะ:</span> <span class="capitalize">{{ $loc->status ?? 'Active' }}</span></div>
+                                <div class="space-y-1 text-xs">
+                                    <div class="flex justify-between"><span>📦 สินค้า:</span> <span class="font-bold text-green-400">{{ number_format($totalQty) }} ชิ้น</span></div>
+                                    <div class="flex justify-between"><span>🏷️ จองแล้ว:</span> <span class="font-bold text-yellow-400">{{ number_format($totalReservedLoc) }} ชิ้น</span></div>
+                                    <div class="flex justify-between"><span>✅ พร้อมเบิก:</span> <span class="font-bold text-blue-400">{{ number_format($availableLoc) }} ชิ้น</span></div>
+                                    <div class="flex justify-between"><span>📋 จำนวน Lot:</span> <span class="font-bold">{{ $productCount }}</span></div>
+                                    <div class="flex justify-between pt-1 border-t border-gray-700 mt-1"><span>สถานะ:</span> <span>{{ $statusLabel }}</span></div>
                                 </div>
-                                <svg class="absolute text-gray-900 h-3 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255" xml:space="preserve"><polygon class="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
+                                <svg class="absolute text-gray-900 h-3 w-full left-0 top-full" viewBox="0 0 255 255"><polygon class="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
                             </div>
                         </div>
                     @endforeach
@@ -76,19 +167,35 @@
         </div>
     </div>
 
-    <div id="locationModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 z-50 flex justify-center items-center backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 max-h-[85vh] flex flex-col transform transition-all">
-            
+    {{-- Modal --}}
+    <div id="locationModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 z-50 flex justify-center items-center backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 max-h-[85vh] flex flex-col">
+
             <div class="p-5 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
                 <div class="flex items-center gap-3">
                     <span class="text-3xl">📍</span>
-                    <h3 class="text-xl font-bold text-gray-800">รายการสินค้าในพื้นที่: <span id="modalTitleName" class="text-blue-600">...</span></h3>
+                    <h3 class="text-xl font-bold text-gray-800">สินค้าในพื้นที่: <span id="modalTitleName" class="text-blue-600">...</span></h3>
                 </div>
                 <button onclick="closeModal()" class="text-gray-400 hover:text-red-500 font-bold text-3xl leading-none transition">&times;</button>
             </div>
 
             <div class="p-6 overflow-y-auto bg-white flex-1">
-                
+                {{-- Summary inside modal --}}
+                <div id="modalSummary" class="hidden grid grid-cols-3 gap-3 mb-4">
+                    <div class="bg-blue-50 rounded-lg p-3 text-center">
+                        <p class="text-xs text-gray-500">สินค้าทั้งหมด</p>
+                        <p id="modalTotalQty" class="text-xl font-black text-blue-600">0</p>
+                    </div>
+                    <div class="bg-yellow-50 rounded-lg p-3 text-center">
+                        <p class="text-xs text-gray-500">ถูกจอง</p>
+                        <p id="modalTotalReserved" class="text-xl font-black text-yellow-600">0</p>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-3 text-center">
+                        <p class="text-xs text-gray-500">พร้อมเบิก</p>
+                        <p id="modalTotalAvailable" class="text-xl font-black text-green-600">0</p>
+                    </div>
+                </div>
+
                 <div id="loadingIndicator" class="text-center py-10 hidden">
                     <svg class="animate-spin h-10 w-10 text-blue-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -104,17 +211,19 @@
                 </div>
 
                 <div id="itemsTableContainer" class="hidden rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                    <table class="w-full text-left text-sm whitespace-nowrap">
-                        <thead class="bg-gray-100 text-gray-700">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
                             <tr>
-                                <th class="p-4 font-semibold">SKU</th>
-                                <th class="p-4 font-semibold">ชื่อสินค้า</th>
-                                <th class="p-4 font-semibold text-center">คงเหลือ (Qty)</th>
-                                <th class="p-4 font-semibold text-center">ถูกจอง (Reserved)</th>
+                                <th class="p-3">SKU</th>
+                                <th class="p-3">ชื่อสินค้า</th>
+                                <th class="p-3 text-center">Lot / วันรับ</th>
+                                <th class="p-3 text-center">จำนวน</th>
+                                <th class="p-3 text-center">จอง</th>
+                                <th class="p-3 text-center">พร้อมเบิก</th>
                             </tr>
                         </thead>
                         <tbody id="itemsTableBody" class="divide-y divide-gray-100">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -127,17 +236,15 @@
 
     <script>
         function openLocationPopup(locationId, locationName) {
-            // เปิดหน้าต่างและตั้งชื่อ
             document.getElementById('locationModal').classList.remove('hidden');
             document.getElementById('modalTitleName').innerText = locationName;
-            
-            // สลับสถานะ UI
+
             document.getElementById('itemsTableContainer').classList.add('hidden');
             document.getElementById('emptyMessage').classList.add('hidden');
+            document.getElementById('modalSummary').classList.add('hidden');
             document.getElementById('loadingIndicator').classList.remove('hidden');
             document.getElementById('itemsTableBody').innerHTML = '';
 
-            // ⚠️ ต้องมี API Route เพื่อดึงข้อมูลนี้นะครับ
             fetch(`/api/locations/${locationId}/items`)
                 .then(response => response.json())
                 .then(data => {
@@ -146,18 +253,42 @@
                     if (data.items.length === 0) {
                         document.getElementById('emptyMessage').classList.remove('hidden');
                     } else {
+                        // Calculate totals
+                        let totalQty = 0, totalReserved = 0, totalAvailable = 0;
+                        data.items.forEach(item => {
+                            totalQty += item.quantity;
+                            totalReserved += item.reserved;
+                            totalAvailable += item.available;
+                        });
+
+                        // Show summary
+                        document.getElementById('modalTotalQty').innerText = totalQty.toLocaleString();
+                        document.getElementById('modalTotalReserved').innerText = totalReserved.toLocaleString();
+                        document.getElementById('modalTotalAvailable').innerText = totalAvailable.toLocaleString();
+                        document.getElementById('modalSummary').classList.remove('hidden');
+
+                        // Render table
                         document.getElementById('itemsTableContainer').classList.remove('hidden');
-                        
                         let html = '';
                         data.items.forEach(item => {
+                            const reservedBadge = item.reserved > 0
+                                ? `<span class="bg-yellow-100 text-yellow-700 font-bold px-2 py-0.5 rounded-full">${item.reserved}</span>`
+                                : `<span class="text-gray-300">0</span>`;
+
                             html += `
                                 <tr class="hover:bg-blue-50 transition">
-                                    <td class="p-4 font-mono text-xs text-gray-600">${item.sku}</td>
-                                    <td class="p-4 font-medium text-gray-900">${item.product_name}</td>
-                                    <td class="p-4 text-center">
-                                        <span class="bg-green-100 text-green-800 font-bold px-3 py-1 rounded-full">${item.quantity}</span>
+                                    <td class="p-3 font-mono text-xs text-gray-500">${item.sku}</td>
+                                    <td class="p-3 font-medium text-gray-900">${item.product_name}</td>
+                                    <td class="p-3 text-center text-xs text-gray-400">
+                                        ${item.lot_number}<br>${item.received_date}
                                     </td>
-                                    <td class="p-4 text-center text-yellow-600 font-semibold">${item.reserved}</td>
+                                    <td class="p-3 text-center">
+                                        <span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full">${item.quantity}</span>
+                                    </td>
+                                    <td class="p-3 text-center">${reservedBadge}</td>
+                                    <td class="p-3 text-center">
+                                        <span class="bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full">${item.available}</span>
+                                    </td>
                                 </tr>
                             `;
                         });
@@ -165,7 +296,7 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error fetching data:', error);
+                    console.error('Error:', error);
                     document.getElementById('loadingIndicator').classList.add('hidden');
                     alert('ไม่สามารถดึงข้อมูลได้ โปรดลองอีกครั้ง');
                 });
@@ -175,11 +306,8 @@
             document.getElementById('locationModal').classList.add('hidden');
         }
 
-        // ปิด Modal เมื่อคลิกพื้นที่สีดำรอบนอก
         document.getElementById('locationModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
-            }
+            if (e.target === this) closeModal();
         });
     </script>
 </x-app-layout>

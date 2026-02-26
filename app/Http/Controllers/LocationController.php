@@ -23,7 +23,11 @@ class LocationController extends Controller
                 return [
                     'product_name' => $stock->product->name ?? 'ไม่ทราบชื่อ',
                     'sku' => $stock->product->sku ?? '-',
-                    'quantity' => $stock->quantity
+                    'quantity' => $stock->quantity,
+                    'reserved' => $stock->reserved_qty ?? 0,
+                    'available' => $stock->quantity - ($stock->reserved_qty ?? 0),
+                    'lot_number' => $stock->lot_number ?? '-',
+                    'received_date' => $stock->received_date ? date('d/m/Y', strtotime($stock->received_date)) : '-',
                 ];
             })
         ]);
