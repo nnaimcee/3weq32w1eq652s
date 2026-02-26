@@ -15,6 +15,7 @@ use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ScannerController;
 
 // --- IGNORE --- (ส่วนนี้เป็นโค้ดที่ Laravel สร้างมาให้แล้ว ไม่ต้องแก้ไข)
+Route::redirect('/', '/login');
 Route::get('/dashboard', function () {
     $transitLocationIds = \App\Models\Location::where('type', 'transit')->pluck('id');
     $inactiveLocationIds = \App\Models\Location::where('status', 'inactive')->pluck('id');
