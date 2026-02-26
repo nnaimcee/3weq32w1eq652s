@@ -10,96 +10,121 @@ use Illuminate\Support\Facades\DB;
 
 class TransferController extends Controller
 {
-    // 1. หน้าจอส่งของออก (ต้นทาง)
-    public function create(){
-    // ดึงข้อมูลแบบจัดกลุ่มตาม Product และ Location แล้วเอาจำนวน (quantity) มาบวกกัน
-    $stocks = \App\Models\Stock::with(['product', 'location'])
-        ->select('product_id', 'location_id', \DB::raw('SUM(quantity) as total_quantity'))
-        ->where('quantity', '>', 0)
-        ->groupBy('product_id', 'location_id')
-        ->get();
-
-    return view('transfer.send', compact('stocks'));
-}
-
-    // 2. Logic ส่งของไปที่ Transit (ตัดจากที่เก็บเดิม)
-   public function send(Request $request)
-{
-    $request->validate([
-        'product_id' => 'required',
-        'location_id' => 'required',
-        'quantity' => 'required|integer|min:1',
-    ]);
-
-    $transitLocation = \App\Models\Location::where('type', 'transit')->first();
-    $requestedQty = $request->quantity;
-
-    // ตรวจสอบสต็อกรวมในตำแหน่งนั้นว่าพอไหม
-    $totalInLocation = \App\Models\Stock::where('product_id', $request->product_id)
-        ->where('location_id', $request->location_id)
-        ->sum('quantity');
-
-    if ($totalInLocation < $requestedQty) {
-        return back()->withErrors(['จำนวนสินค้าในตำแหน่งนี้ไม่พอให้ย้าย']);
-    }
-
-    \DB::transaction(function () use ($request, $transitLocation, $requestedQty) {
-        // ดึงรายการสต็อกในตำแหน่งนั้น เรียงตามวันที่รับเข้า (FIFO)
-        $locationStocks = \App\Models\Stock::where('product_id', $request->product_id)
-            ->where('location_id', $request->location_id)
+    // 1. หน้าจอส่งของออก (ต้นทาง) — ระบุปลายทางตั้งแต่ตอนส่ง
+    public function create()
+    {
+        $stocks = Stock::with(['product', 'location'])
+            ->select('product_id', 'location_id', DB::raw('SUM(quantity) as total_quantity'))
             ->where('quantity', '>', 0)
-            ->orderBy('received_date', 'asc')
+            ->groupBy('product_id', 'location_id')
             ->get();
 
-        $remainingToMove = $requestedQty;
+        // ดึง Location ปลายทาง (เฉพาะ storage ที่ active)
+        $destinations = Location::where('type', 'storage')->where('status', 'active')->get();
 
-        foreach ($locationStocks as $stock) {
-            if ($remainingToMove <= 0) break;
+        return view('transfer.send', compact('stocks', 'destinations'));
+    }
 
-            $moveAmount = min($stock->quantity, $remainingToMove);
+    // 2. Logic ส่งของไปที่ Transit พร้อมระบุปลายทาง
+    public function send(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required',
+            'location_id' => 'required',
+            'to_location_id' => 'required|exists:locations,id',
+            'quantity' => 'required|integer|min:1',
+        ]);
 
-            // 1. ลดจำนวนจากที่เดิม
-            $stock->decrement('quantity', $moveAmount);
-
-            // 2. ย้ายไป Transit (สร้างล็อตใหม่โดยรักษาเวลา FIFO เดิมไว้)
-            \App\Models\Stock::create([
-                'product_id' => $stock->product_id,
-                'location_id' => $transitLocation->id,
-                'quantity' => $moveAmount,
-                'received_date' => $stock->received_date,
-                'lot_number' => $stock->lot_number,
-            ]);
-
-            $remainingToMove -= $moveAmount;
+        // ห้ามส่งไปที่เดิม
+        if ($request->location_id == $request->to_location_id) {
+            return back()->withErrors(['ไม่สามารถย้ายไปตำแหน่งเดิมได้']);
         }
 
-        // 3. บันทึกประวัติ
-        \App\Models\Transaction::create([
-            'user_id' => auth()->id(),
-            'product_id' => $request->product_id,
-            'from_location_id' => $request->location_id,
-            'to_location_id' => $transitLocation->id,
-            'quantity' => $request->quantity,
-            'type' => 'TRANSFER',
-            'status' => 'pending'
-        ]);
-    });
+        $transitLocation = Location::where('type', 'transit')->first();
 
-    return redirect()->route('transfer.pending')->with('success', '🚚 ส่งสินค้าไปยังพื้นที่ Transit แล้ว');
-}
+        if (!$transitLocation) {
+            return back()->withErrors(['ไม่พบพื้นที่ Transit ในระบบ กรุณาสร้างก่อน']);
+        }
+
+        $requestedQty = $request->quantity;
+
+        // ตรวจสอบสต็อกรวมในตำแหน่งนั้นว่าพอไหม
+        $totalInLocation = Stock::where('product_id', $request->product_id)
+            ->where('location_id', $request->location_id)
+            ->sum('quantity');
+
+        if ($totalInLocation < $requestedQty) {
+            return back()->withErrors(['จำนวนสินค้าในตำแหน่งนี้ไม่พอให้ย้าย (เหลือ ' . $totalInLocation . ' ชิ้น)']);
+        }
+
+        DB::transaction(function () use ($request, $transitLocation, $requestedQty) {
+            // ดึงรายการสต็อกในตำแหน่งนั้น เรียงตามวันที่รับเข้า (FIFO)
+            $locationStocks = Stock::where('product_id', $request->product_id)
+                ->where('location_id', $request->location_id)
+                ->where('quantity', '>', 0)
+                ->orderBy('received_date', 'asc')
+                ->get();
+
+            $remainingToMove = $requestedQty;
+
+            foreach ($locationStocks as $stock) {
+                if ($remainingToMove <= 0) break;
+
+                $moveAmount = min($stock->quantity, $remainingToMove);
+
+                // 1. ลดจำนวนจากที่เดิม
+                $stock->decrement('quantity', $moveAmount);
+
+                // 2. ย้ายไป Transit (สร้างล็อตใหม่โดยรักษาเวลา FIFO เดิมไว้)
+                Stock::create([
+                    'product_id' => $stock->product_id,
+                    'location_id' => $transitLocation->id,
+                    'quantity' => $moveAmount,
+                    'received_date' => $stock->received_date,
+                    'lot_number' => $stock->lot_number,
+                ]);
+
+                $remainingToMove -= $moveAmount;
+            }
+
+            // 3. บันทึกประวัติ พร้อมระบุปลายทางเลย
+            Transaction::create([
+                'user_id' => auth()->id(),
+                'product_id' => $request->product_id,
+                'from_location_id' => $request->location_id,
+                'to_location_id' => $request->to_location_id,
+                'quantity' => $request->quantity,
+                'type' => 'TRANSFER',
+                'status' => 'pending',
+                'notes' => 'กำลังจัดส่ง → ' . Location::find($request->to_location_id)->name,
+            ]);
+        });
+
+        return redirect()->route('transfer.pending')->with('success', '🚚 ส่งสินค้าไป Transit แล้ว — ปลายทาง: ' . Location::find($request->to_location_id)->name);
+    }
 
     // 3. หน้าจอรายการที่ค้างอยู่ใน Transit (รอรับเข้า)
     public function pending()
     {
         $transitLocation = Location::where('type', 'transit')->first();
+
+        // ดึง stock ที่อยู่ใน transit
         $stocksInTransit = Stock::where('location_id', $transitLocation->id)
                                 ->where('quantity', '>', 0)
                                 ->with('product')
                                 ->get();
-        
-        $destinations = Location::where('type', 'storage')->get();
-        
-        return view('transfer.pending', compact('stocksInTransit', 'destinations'));
+
+        // ดึง transaction ที่ pending เพื่อแสดงข้อมูลปลายทาง/ผู้ส่ง
+        $pendingTransactions = Transaction::where('type', 'TRANSFER')
+            ->where('status', 'pending')
+            ->with(['product', 'user', 'fromLocation', 'toLocation'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // จับคู่ stock กับ transaction ด้วย product_id
+        $destinations = Location::where('type', 'storage')->where('status', 'active')->get();
+
+        return view('transfer.pending', compact('stocksInTransit', 'pendingTransactions', 'destinations'));
     }
 
     // 4. Logic ยืนยันรับของจาก Transit เข้าที่ใหม่
@@ -126,12 +151,19 @@ class TransferController extends Controller
             $transitStock->delete();
 
             // อัปเดตสถานะ Transaction ล่าสุดของไอเทมนี้
-            Transaction::where('product_id', $transitStock->product_id)
+            $transaction = Transaction::where('product_id', $transitStock->product_id)
                         ->where('type', 'TRANSFER')
                         ->where('status', 'pending')
                         ->latest()
-                        ->first()
-                        ->update(['status' => 'completed', 'to_location_id' => $request->to_location_id]);
+                        ->first();
+
+            if ($transaction) {
+                $transaction->update([
+                    'status' => 'completed',
+                    'to_location_id' => $request->to_location_id,
+                    'notes' => '✅ รับของเรียบร้อย → ' . Location::find($request->to_location_id)->name,
+                ]);
+            }
         });
 
         return redirect()->back()->with('success', '✅ ย้ายสินค้าเข้าตำแหน่งใหม่เรียบร้อย!');
