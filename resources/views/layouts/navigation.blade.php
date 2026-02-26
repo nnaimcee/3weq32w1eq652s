@@ -39,10 +39,12 @@
             <span class="w-5 text-center">📦</span> สต็อกสินค้า
         </a>
 
+        @if(auth()->user()->role === 'admin')
         <a href="{{ route('products.create') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('products.create') ? 'bg-blue-600 text-white shadow-md' : 'text-slate-300 hover:bg-slate-700 hover:text-white' }}">
             <span class="w-5 text-center">➕</span> เพิ่มสินค้าใหม่
         </a>
+        @endif
 
         {{-- งานคลัง --}}
         <p class="px-3 text-xs font-bold text-slate-500 uppercase tracking-wider mt-6 mb-2">งานคลัง</p>

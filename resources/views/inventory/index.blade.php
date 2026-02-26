@@ -97,10 +97,12 @@
 
                         {{-- Action buttons --}}
                         <div class="flex gap-2 ml-2">
+                            @if(auth()->user()->role === 'admin')
                             <button onclick="event.stopPropagation(); openReservationModal('{{ $product->id }}', '{{ addslashes($product->name) }}', {{ $qty }}, {{ $reserved }})"
                                 class="bg-yellow-500 hover:bg-yellow-600 text-white py-1.5 px-3 rounded-lg text-xs font-bold shadow-sm transition">
                                 🔒 จอง
                             </button>
+                            @endif
                             <button onclick="event.stopPropagation(); printStickerDirect('{{ addslashes($product->name) }}', '{{ $product->sku }}', '{{ $product->id }}')"
                                 class="bg-gray-700 hover:bg-black text-white py-1.5 px-3 rounded-lg text-xs font-bold shadow-sm transition">
                                 🖨️
@@ -203,7 +205,8 @@
                             </div>
                             @endif
 
-                            {{-- Delete button --}}
+                            {{-- Delete button (admin only) --}}
+                            @if(auth()->user()->role === 'admin')
                             <div class="mt-4 pt-3 border-t border-gray-200 flex justify-end">
                                 <form action="{{ route('inventory.destroy', $product->id) }}" method="POST"
                                     onsubmit="return confirm('⚠️ คุณแน่ใจใช่ไหมที่จะลบสินค้า {{ addslashes($product->name) }}?');">
@@ -214,6 +217,7 @@
                                     </button>
                                 </form>
                             </div>
+                            @endif
                         </div>
                     @endif
                 </div>

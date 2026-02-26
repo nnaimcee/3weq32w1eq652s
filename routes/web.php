@@ -113,10 +113,14 @@ Route::get('/products/barcode/{id}', [ProductController::class, 'printBarcode'])
 
 
 
-// Routes สำหรับจัดการสินค้า (เพิ่มสินค้าใหม่)
-Route::middleware(['auth'])->group(function () {
+// Routes สำหรับจัดการสินค้า (เพิ่มสินค้าใหม่ - เฉพาะ Admin)
+Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
     Route::post('/products/store', [ProductController::class, 'store'])->name('products.store');
+});
+
+// Routes ที่ทุก role ใช้ได้
+Route::middleware(['auth'])->group(function () {
     Route::get('/products/{id}/print', [ProductController::class, 'printBarcode'])->name('products.print_barcode');
     Route::get('/products/{id}/qrcode', [ProductController::class, 'printQrCode'])->name('products.print_qrcode');
     Route::get('/scanner', [ScannerController::class, 'index'])->name('scanner.index');
@@ -143,22 +147,22 @@ Route::get('/transactions', [TransactionController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('transactions.index');
 
-// Route สำหรับลบรายการสต็อก (ใช้ในกรณีที่ต้องการแก้ไขข้อมูลสต็อกที่ผิดพลาด)
+// Route สำหรับลบรายการสต็อก (เฉพาะ Admin)
 Route::delete('/inventory/{id}', [App\Http\Controllers\InventoryController::class, 'destroy'])
-    ->middleware(['auth'])
+    ->middleware(['auth', 'admin'])
     ->name('inventory.destroy');
 
 // API Route สำหรับดึงข้อมูลสินค้าโดยใช้บาร์โค้ด (ใช้ในฟอร์มรับของเข้า)
 Route::get('/api/products/{barcode}', [App\Http\Controllers\ProductController::class, 'getByBarcode'])
     ->middleware(['auth']);
 
-// Routes สำหรับจัดการการจองสินค้า (Reservation)
+// Routes สำหรับจัดการการจองสินค้า (เฉพาะ Admin)
 Route::post('/reservation/reserve', [App\Http\Controllers\ReservationController::class, 'reserve'])
-    ->middleware(['auth'])
+    ->middleware(['auth', 'admin'])
     ->name('reservation.reserve');
 
 Route::post('/reservation/release', [App\Http\Controllers\ReservationController::class, 'release'])
-    ->middleware(['auth'])
+    ->middleware(['auth', 'admin'])
     ->name('reservation.release');
 
 // API Route สำหรับดึงข้อมูลสินค้าที่อยู่ใน Location ที่ถูกคลิก (ใช้ในแผนที่คลังสินค้า)
