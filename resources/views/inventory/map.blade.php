@@ -13,9 +13,10 @@
                 $allLocations = collect();
                 foreach ($zones as $locs) { $allLocations = $allLocations->merge($locs); }
                 $totalLocations = $allLocations->count();
-                $occupied = $allLocations->filter(fn($l) => $l->stocks->sum('quantity') > 0)->count();
-                $reserved = $allLocations->filter(fn($l) => $l->stocks->sum('quantity') == 0 && $l->stocks->sum('reserved_qty') > 0)->count();
-                $empty = $totalLocations - $occupied - $reserved;
+                $full = $allLocations->filter(fn($l) => $l->status === 'full')->count();
+                $occupied = $allLocations->filter(fn($l) => $l->stocks->sum('quantity') > 0 && $l->status !== 'full')->count();
+                $reserved = $allLocations->filter(fn($l) => $l->stocks->sum('quantity') == 0 && $l->stocks->sum('reserved_qty') > 0 && $l->status !== 'full')->count();
+                $empty = $totalLocations - $full - $occupied - $reserved;
                 $totalItems = $allLocations->sum(fn($l) => $l->stocks->sum('quantity'));
                 $totalReserved = $allLocations->sum(fn($l) => $l->stocks->sum('reserved_qty'));
             @endphp
@@ -24,6 +25,10 @@
                 <div class="bg-white rounded-xl shadow p-4 border-l-4 border-gray-400">
                     <p class="text-xs text-gray-500 font-bold">📍 ตำแหน่งทั้งหมด</p>
                     <p class="text-2xl font-black text-gray-700">{{ $totalLocations }}</p>
+                </div>
+                <div class="bg-white rounded-xl shadow p-4 border-l-4 border-orange-500">
+                    <p class="text-xs text-gray-500 font-bold">📦 เต็มแล้ว</p>
+                    <p class="text-2xl font-black text-orange-600">{{ $full }}</p>
                 </div>
                 <div class="bg-white rounded-xl shadow p-4 border-l-4 border-blue-500">
                     <p class="text-xs text-gray-500 font-bold">📦 มีสินค้า</p>
@@ -52,6 +57,10 @@
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded-full bg-blue-600"></span>
                     <span class="text-sm font-medium text-gray-600">มีสินค้า (Occupied)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded-full bg-orange-500"></span>
+                    <span class="text-sm font-medium text-gray-600">เต็ม (Full)</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded-full bg-yellow-500"></span>
@@ -96,6 +105,10 @@
                                 $cardClasses = 'bg-red-50 border-red-300 text-red-900';
                                 $dotColor = 'bg-red-500';
                                 $statusLabel = 'ปิดใช้งาน';
+                            } elseif ($loc->status === 'full') {
+                                $cardClasses = 'bg-orange-50 border-orange-300 text-orange-900 hover:bg-orange-100 hover:shadow-xl hover:-translate-y-1';
+                                $dotColor = 'bg-orange-500';
+                                $statusLabel = 'เต็ม';
                             } elseif ($totalQty > 0) {
                                 $cardClasses = 'bg-blue-50 border-blue-300 text-blue-900 hover:bg-blue-100 hover:shadow-xl hover:-translate-y-1';
                                 $dotColor = 'bg-blue-600';
@@ -117,7 +130,9 @@
                             {{-- Status dots --}}
                             <div class="absolute top-2 right-2 flex gap-1">
                                 @if($loc->status === 'inactive')
-                                    <span class="w-3 h-3 rounded-full bg-red-500 shadow-sm"></span>
+                                    <span class="w-3 h-3 rounded-full bg-red-500 shadow-sm" title="ปิดใช้งาน"></span>
+                                @elseif($loc->status === 'full')
+                                    <span class="w-3 h-3 rounded-full bg-orange-500 shadow-sm" title="เต็ม (Full)"></span>
                                 @else
                                     @if($totalQty > 0)
                                         <span class="w-3 h-3 rounded-full bg-blue-600 shadow-sm" title="มีสินค้า"></span>
