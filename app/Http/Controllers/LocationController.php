@@ -87,6 +87,8 @@ class LocationController extends Controller
         $request->validate([
             'name' => 'required|string|max:100|unique:locations,name,' . $id,
             'zone' => 'nullable|string|max:50',
+            'shelf' => 'nullable|string|max:50',
+            'bin' => 'nullable|string|max:50',
             'type' => 'required|in:storage,transit',
             'status' => 'required|in:active,inactive,full',
         ], [
@@ -96,6 +98,8 @@ class LocationController extends Controller
         $location->update([
             'name' => $request->name,
             'zone' => $request->zone,
+            'shelf' => $request->shelf,
+            'bin' => $request->bin,
             'type' => $request->type,
             'status' => $request->status,
         ]);

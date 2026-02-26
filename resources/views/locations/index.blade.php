@@ -75,10 +75,12 @@
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <span class="text-gray-500">🔍</span>
                                 </div>
-                                <input type="text" name="search" value="{{ request('search') }}" placeholder="ค้นหาชื่อสถานที่ หรือ Zone..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                                <input type="text" id="searchInput" name="search" value="{{ request('search') }}" placeholder="พิมพ์ชื่อสถานที่ หรือ Zone เพื่อค้นหาทันที..." 
+                                    onkeyup="filterLocations()"
+                                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
                             </div>
                             <div class="flex gap-2">
-                                <button type="submit" class="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-6 rounded-lg shadow transition w-full sm:w-auto text-sm">
+                                <button type="submit" class="hidden sm:block bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-6 rounded-lg shadow transition w-full sm:w-auto text-sm">
                                     ค้นหา
                                 </button>
                                 @if(request('search'))
@@ -106,9 +108,9 @@
                                         <th class="px-4 py-3 text-center">จัดการ</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-200">
+                                <tbody class="divide-y divide-gray-200" id="locationsTableBody">
                                     @forelse ($locations as $location)
-                                        <tr class="hover:bg-gray-50" id="row-{{ $location->id }}">
+                                        <tr class="hover:bg-gray-50 location-row" id="row-{{ $location->id }}" data-search="{{ mb_strtolower($location->name . ' ' . $location->zone . ' ' . $location->shelf . ' ' . $location->bin) }}">
                                             {{-- Display Mode --}}
                                             <td class="px-4 py-3 font-mono font-bold display-cell-{{ $location->id }}">
                                                 {{ $location->name }}
@@ -169,6 +171,16 @@
                                                         <input type="text" name="zone" value="{{ $location->zone }}"
                                                             class="w-full border-gray-300 rounded text-sm">
                                                     </div>
+                                                    <div class="w-16">
+                                                        <label class="text-xs text-gray-500 font-bold">Shelf</label>
+                                                        <input type="text" name="shelf" value="{{ $location->shelf }}"
+                                                            class="w-full border-gray-300 rounded text-sm">
+                                                    </div>
+                                                    <div class="w-16">
+                                                        <label class="text-xs text-gray-500 font-bold">Bin</label>
+                                                        <input type="text" name="bin" value="{{ $location->bin }}"
+                                                            class="w-full border-gray-300 rounded text-sm">
+                                                    </div>
                                                     <div class="w-28">
                                                         <label class="text-xs text-gray-500 font-bold">ประเภท</label>
                                                         <select name="type" class="w-full border-gray-300 rounded text-sm">
@@ -220,17 +232,45 @@
 
     <script>
         function showEditForm(id) {
-            // ซ่อน display cells
             document.querySelectorAll(`.display-cell-${id}`).forEach(el => el.classList.add('hidden'));
-            // แสดง edit cell
             document.querySelectorAll(`.edit-cell-${id}`).forEach(el => el.classList.remove('hidden'));
         }
 
         function hideEditForm(id) {
-            // แสดง display cells
             document.querySelectorAll(`.display-cell-${id}`).forEach(el => el.classList.remove('hidden'));
-            // ซ่อน edit cell
             document.querySelectorAll(`.edit-cell-${id}`).forEach(el => el.classList.add('hidden'));
+        }
+
+        function filterLocations() {
+            let input = document.getElementById('searchInput').value.toLowerCase();
+            let rows = document.querySelectorAll('.location-row');
+            let hasVisible = false;
+
+            rows.forEach(row => {
+                let searchData = row.getAttribute('data-search') || "";
+                if (searchData.includes(input)) {
+                    row.style.display = "";
+                    hasVisible = true;
+                } else {
+                    row.style.display = "none";
+                }
+            });
+
+            // ตรวจสอบจัดการข้อความ "ไม่พบข้อมูล"
+            let emptyMsg = document.getElementById('emptySearchMsg');
+            if (!hasVisible && input !== "") {
+                if (!emptyMsg) {
+                    emptyMsg = document.createElement('tr');
+                    emptyMsg.id = 'emptySearchMsg';
+                    emptyMsg.innerHTML = `<td colspan="6" class="px-4 py-8 text-center text-gray-500 font-bold"> ไม่พบสถานที่ที่ตรงกับ: "${input}" </td>`;
+                    document.getElementById('locationsTableBody').appendChild(emptyMsg);
+                } else {
+                    emptyMsg.innerHTML = `<td colspan="6" class="px-4 py-8 text-center text-gray-500 font-bold"> ไม่พบสถานที่ที่ตรงกับ: "${input}" </td>`;
+                    emptyMsg.style.display = "";
+                }
+            } else if (emptyMsg) {
+                emptyMsg.style.display = "none";
+            }
         }
     </script>
 </x-app-layout>
