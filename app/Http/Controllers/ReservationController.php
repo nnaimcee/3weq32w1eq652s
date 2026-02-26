@@ -16,63 +16,63 @@ class ReservationController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
+            'location_id' => 'nullable|exists:locations,id',
         ]);
 
         $product = Product::findOrFail($request->product_id);
         $requestedQty = $request->quantity;
+        $locationId = $request->location_id;
 
         // 1. เช็คว่ามีของ "ว่างพร้อมจอง" พอไหม (ไม่นับสต็อกใน Transit)
         $transitLocationIds = \App\Models\Location::where('type', 'transit')->pluck('id');
-        $totalStock = Stock::where('product_id', $product->id)
-            ->whereNotIn('location_id', $transitLocationIds)
-            ->sum('quantity');
-        $totalReserved = Stock::where('product_id', $product->id)
-            ->whereNotIn('location_id', $transitLocationIds)
-            ->sum('reserved_qty');
+        $stockQuery = Stock::where('product_id', $product->id)
+            ->whereNotIn('location_id', $transitLocationIds);
+        if ($locationId) {
+            $stockQuery->where('location_id', $locationId);
+        }
+        $totalStock = (clone $stockQuery)->sum('quantity');
+        $totalReserved = (clone $stockQuery)->sum('reserved_qty');
         $availableToReserve = $totalStock - $totalReserved;
 
         if ($availableToReserve < $requestedQty) {
             return back()->withErrors(['สินค้ามีไม่พอให้จอง! (เหลือว่างรับจองแค่ ' . number_format($availableToReserve) . ' ชิ้น)']);
         }
 
-        DB::transaction(function () use ($product, $requestedQty, $transitLocationIds) {
-            // 2. ดึง Lot ที่ยังมีของเหลือ และยังจองไม่เต็ม
-            // เรียงตาม FIFO (received_date ASC)
-            $stocks = Stock::where('product_id', $product->id)
+        DB::transaction(function () use ($product, $requestedQty, $transitLocationIds, $locationId) {
+            // 2. ดึง Lot ที่ยังมีของเหลือ FIFO
+            $query = Stock::where('product_id', $product->id)
                 ->whereNotIn('location_id', $transitLocationIds)
-                ->whereRaw('quantity > reserved_qty') // เอาเฉพาะที่มีของว่างจริง
-                ->orderBy('received_date', 'asc')
-                ->get();
+                ->whereRaw('quantity > reserved_qty')
+                ->orderBy('received_date', 'asc');
+            if ($locationId) {
+                $query->where('location_id', $locationId);
+            }
+            $stocks = $query->get();
 
             $remainingToReserve = $requestedQty;
 
             foreach ($stocks as $stock) {
                 if ($remainingToReserve <= 0) break;
-
-                // คำนวณว่า Lot นี้จองเพิ่มได้อีกกี่ชิ้น
                 $availableInLot = $stock->quantity - $stock->reserved_qty;
 
                 if ($availableInLot >= $remainingToReserve) {
-                    // Lot นี้มีที่ว่างเหลือพอ หรือ มากกว่าที่ต้องการ -> จองให้ครบเลย
                     $stock->reserved_qty += $remainingToReserve;
                     $stock->save();
                     $remainingToReserve = 0;
                 } else {
-                    // Lot นี้มีที่ว่างไม่พอ -> จองทั้งหมดที่มี แล้วไป Lot ถัดไป
-                    $availableToTake = $availableInLot; // แก้ไข: ใช้ตัวแปรนี้เพื่อความชัดเจน
-                    $remainingToReserve -= $availableToTake;
-                    $stock->reserved_qty += $availableToTake; 
+                    $remainingToReserve -= $availableInLot;
+                    $stock->reserved_qty += $availableInLot;
                     $stock->save();
                 }
             }
 
             // 3. บันทึก Transaction (RESERVE)
-            // เช็คว่า model Transaction รองรับ type ที่ยาวกว่านี้ไหม (ปกติ string)
             Transaction::create([
                 'user_id' => auth()->id(),
                 'product_id' => $product->id,
                 'quantity' => $requestedQty,
-                'type' => 'RESERVE', 
+                'type' => 'RESERVE',
+                'to_location_id' => $locationId,
             ]);
         });
 

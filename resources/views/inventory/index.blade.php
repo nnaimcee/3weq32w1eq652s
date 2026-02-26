@@ -253,6 +253,14 @@
                     <input type="hidden" name="product_id" id="resProductId">
 
                     <div class="mt-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">📍 ตำแหน่งที่จะจอง:</label>
+                        <select name="location_id" id="resLocationSelect"
+                            class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="">ทุกตำแหน่ง (FIFO อัตโนมัติ)</option>
+                        </select>
+                    </div>
+
+                    <div class="mt-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2">จำนวน (Qty):</label>
                         <input type="number" name="quantity" min="1" required
                             class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
@@ -272,6 +280,27 @@
     </div>
 
     <script>
+        // Product → location stock data for location dropdown
+        const productLocations = {!! json_encode(
+            $products->mapWithKeys(function($p) use ($transitLocationIds) {
+                $locs = $p->stocks
+                    ->filter(fn($s) => !$transitLocationIds->contains($s->location_id) && $s->quantity > 0)
+                    ->groupBy('location_id')
+                    ->map(function($stocks) {
+                        $loc = $stocks->first()->location;
+                        return [
+                            'id' => $stocks->first()->location_id,
+                            'name' => $loc ? $loc->name : '?',
+                            'zone' => $loc ? $loc->zone : '',
+                            'qty' => $stocks->sum('quantity'),
+                            'reserved' => $stocks->sum('reserved_qty'),
+                            'available' => $stocks->sum('quantity') - $stocks->sum('reserved_qty'),
+                        ];
+                    })->values();
+                return [$p->id => $locs];
+            })
+        ) !!};
+
         function toggleDetail(id) {
             const el = document.getElementById(id);
             const productId = id.replace('detail-', '');
@@ -292,6 +321,20 @@
             document.getElementById('resModalTotal').innerText = total;
             document.getElementById('resModalReserved').innerText = reserved;
             document.getElementById('resModalAvailable').innerText = total - reserved;
+
+            // Populate location dropdown
+            const select = document.getElementById('resLocationSelect');
+            select.innerHTML = '<option value="">ทุกตำแหน่ง (FIFO อัตโนมัติ)</option>';
+            const locs = productLocations[id] || [];
+            locs.forEach(loc => {
+                if (loc.available > 0) {
+                    const opt = document.createElement('option');
+                    opt.value = loc.id;
+                    opt.textContent = `📍 ${loc.name} (${loc.zone}) — ว่าง ${loc.available} ชิ้น`;
+                    select.appendChild(opt);
+                }
+            });
+
             switchTab('reserve');
         }
 
