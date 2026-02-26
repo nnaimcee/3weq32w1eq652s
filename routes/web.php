@@ -169,8 +169,12 @@ Route::post('/reservation/release', [App\Http\Controllers\ReservationController:
 // API Route สำหรับดึงข้อมูลสินค้าที่อยู่ใน Location ที่ถูกคลิก (ใช้ในแผนที่คลังสินค้า)
 Route::get('/api/locations/{id}/items', [App\Http\Controllers\LocationController::class, 'getItems']);
 
-// Routes สำหรับจัดการสถานที่ (เฉพาะ Admin)
+// Routes สำหรับจัดการสถานที่ และผู้ใช้งาน (เฉพาะ Admin)
 Route::middleware(['auth', 'admin'])->group(function () {
+    // ผู้ใช้งาน
+    Route::resource('users', App\Http\Controllers\UserController::class)->except(['show']);
+
+    // สถานที่
     Route::get('/locations', [App\Http\Controllers\LocationController::class, 'index'])->name('locations.index');
     Route::post('/locations', [App\Http\Controllers\LocationController::class, 'store'])->name('locations.store');
     Route::put('/locations/{id}', [App\Http\Controllers\LocationController::class, 'update'])->name('locations.update');

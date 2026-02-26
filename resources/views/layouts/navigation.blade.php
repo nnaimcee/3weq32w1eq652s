@@ -77,8 +77,13 @@
         <p class="px-3 text-xs font-bold text-slate-500 uppercase tracking-wider mt-6 mb-2">แอดมิน</p>
 
         <a href="{{ route('locations.index') }}"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('locations.*') ? 'bg-blue-600 text-white shadow-md' : 'text-slate-300 hover:bg-slate-700 hover:text-white' }}">
-            <span class="w-5 text-center">📍</span> จัดการสถานที่
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('locations.index') ? 'bg-blue-600 text-white shadow-md' : 'text-slate-300 hover:bg-slate-700 hover:text-white' }}">
+            <span class="w-5 text-center">🏢</span> จัดการสถานที่
+        </a>
+
+        <a href="{{ route('users.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('users.*') ? 'bg-blue-600 text-white shadow-md' : 'text-slate-300 hover:bg-slate-700 hover:text-white' }}">
+            <span class="w-5 text-center">👥</span> จัดการผู้ใช้งาน
         </a>
         @endif
 
