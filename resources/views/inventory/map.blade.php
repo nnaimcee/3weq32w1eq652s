@@ -114,8 +114,22 @@
                         <div onclick="openLocationPopup({{ $loc->id }}, '{{ addslashes($loc->name) }}')"
                             class="relative group rounded-xl p-4 shadow-md transition-all duration-300 border-2 {{ $cardClasses }} flex flex-col items-center justify-between h-40 cursor-pointer overflow-hidden">
 
-                            {{-- Status dot --}}
-                            <span class="absolute top-2 right-2 w-3 h-3 rounded-full {{ $dotColor }} shadow-sm"></span>
+                            {{-- Status dots --}}
+                            <div class="absolute top-2 right-2 flex gap-1">
+                                @if($loc->status === 'inactive')
+                                    <span class="w-3 h-3 rounded-full bg-red-500 shadow-sm"></span>
+                                @else
+                                    @if($totalQty > 0)
+                                        <span class="w-3 h-3 rounded-full bg-blue-600 shadow-sm" title="มีสินค้า"></span>
+                                    @endif
+                                    @if($totalReservedLoc > 0)
+                                        <span class="w-3 h-3 rounded-full bg-yellow-500 shadow-sm" title="มีการจอง"></span>
+                                    @endif
+                                    @if($totalQty <= 0 && $totalReservedLoc <= 0)
+                                        <span class="w-3 h-3 rounded-full bg-green-500 shadow-sm" title="ว่าง"></span>
+                                    @endif
+                                @endif
+                            </div>
 
                             {{-- Location Info --}}
                             <div class="text-center">
