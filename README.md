@@ -2,8 +2,6 @@
 
 ระบบจัดการคลังสินค้าอัจฉริยะ (WMS) พัฒนาด้วย **Laravel 11** และ **Tailwind CSS** ระบบออกแบบมาให้ใช้งานง่าย รวดเร็ว และรองรับฟีเจอร์ครบถ้วนสำหรับการบริหารจัดการสต็อกสินค้าในคลัง
 
-![WMS System](https://raw.githubusercontent.com/nnaimcee/wms-system/main/public/images/dashboard-preview.png) *(เพิ่มรูปรถเข็นหรือภาพหน้า Dashboard จริงที่นี่)*
-
 ---
 
 ## 🌟 ฟีเจอร์หลัก (Key Features)
