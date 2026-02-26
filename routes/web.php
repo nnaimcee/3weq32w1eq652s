@@ -65,10 +65,32 @@ Route::get('/dashboard', function () {
         ->where('status', 'pending')
         ->count();
 
+    // 10. Chart: รายการต่อวัน 7 วันล่าสุด (นับจำนวนรายการ)
+    $dailyData = [];
+    for ($i = 6; $i >= 0; $i--) {
+        $date = now()->subDays($i)->toDateString();
+        $label = now()->subDays($i)->format('d/m');
+        $dailyData[] = [
+            'label' => $label,
+            'in' => Transaction::where('type', 'IN')->whereDate('created_at', $date)->count(),
+            'out' => Transaction::where('type', 'OUT')->whereDate('created_at', $date)->count(),
+            'transfer' => Transaction::where('type', 'TRANSFER')->whereDate('created_at', $date)->count(),
+            'reserve' => Transaction::where('type', 'RESERVE')->whereDate('created_at', $date)->count(),
+        ];
+    }
+
+    // 11. Chart: สต็อกแยกตาม Zone
+    $stockByZone = \App\Models\Location::where('type', 'storage')
+        ->with(['stocks' => fn($q) => $q->select('location_id', 'quantity')])
+        ->get()
+        ->groupBy('zone')
+        ->map(fn($locs) => $locs->sum(fn($l) => $l->stocks->sum('quantity')))
+        ->filter(fn($v) => $v > 0);
+
     return view('dashboard', compact(
         'totalProducts', 'totalStock', 'totalReserved', 'totalTransit',
         'totalAvailable', 'totalLocations', 'lowStockCount', 'lowStockProducts',
-        'recentActivities', 'pendingTransfers'
+        'recentActivities', 'pendingTransfers', 'dailyData', 'stockByZone'
     ));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
