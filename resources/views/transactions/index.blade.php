@@ -106,6 +106,10 @@
                                 @if($trx->ref_doc_no)
                                     <span>📄 เลขอ้างอิง: <span class="font-mono font-medium text-gray-700">{{ $trx->ref_doc_no }}</span></span>
                                 @endif
+
+                                @if($trx->lot_number)
+                                    <span>🏷️ ล็อต: <span class="font-mono font-medium text-blue-600">{{ $trx->lot_number }}</span></span>
+                                @endif
                             </div>
 
                             {{-- Notes --}}
