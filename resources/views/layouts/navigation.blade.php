@@ -1,157 +1,97 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
-                    </a>
-                </div>
+{{-- Dark Sidebar Navigation --}}
+<aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+    class="fixed inset-y-0 left-0 z-50 w-64 bg-slate-800 text-white transform lg:translate-x-0 transition-transform duration-200 ease-in-out flex flex-col">
 
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex items-center">
-
-                    {{-- 1. ภาพรวม --}}
-                    <x-dropdown align="left" width="48">
-                        <x-slot name="trigger">
-                            <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                                <div>📊 ภาพรวม</div>
-                                <div class="ms-1">
-                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                                </div>
-                            </button>
-                        </x-slot>
-                        <x-slot name="content">
-                            <x-dropdown-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">🏠 แดชบอร์ด</x-dropdown-link>
-                            <x-dropdown-link :href="route('inventory.map')" :active="request()->routeIs('inventory.map')">🗺️ แผนผังคลังสินค้า</x-dropdown-link>
-                        </x-slot>
-                    </x-dropdown>
-
-                    {{-- 2. สินค้า --}}
-                    <x-dropdown align="left" width="48">
-                        <x-slot name="trigger">
-                            <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                                <div>📦 สินค้า</div>
-                                <div class="ms-1">
-                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                                </div>
-                            </button>
-                        </x-slot>
-                        <x-slot name="content">
-                            <x-dropdown-link :href="route('inventory.index')" :active="request()->routeIs('inventory.index')">📋 สต็อกสินค้า</x-dropdown-link>
-                            <x-dropdown-link :href="route('products.create')" :active="request()->routeIs('products.create')">➕ เพิ่มสินค้าใหม่</x-dropdown-link>
-                        </x-slot>
-                    </x-dropdown>
-
-                    {{-- 3. งานคลัง (รวม scanner เป็นหลัก) --}}
-                    <x-dropdown align="left" width="48">
-                        <x-slot name="trigger">
-                            <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                                <div>🔄 งานคลัง</div>
-                                <div class="ms-1">
-                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                                </div>
-                            </button>
-                        </x-slot>
-                        <x-slot name="content">
-                            <x-dropdown-link :href="route('scanner.index')">📷 สแกนรับ/เบิกสินค้า</x-dropdown-link>
-                            <x-dropdown-link :href="route('transfer.create')">🚚 ย้ายตำแหน่ง</x-dropdown-link>
-                            <x-dropdown-link :href="route('transfer.pending')">📥 รอรับของ (Transit)</x-dropdown-link>
-                        </x-slot>
-                    </x-dropdown>
-
-                    {{-- 4. ประวัติ --}}
-                    <x-nav-link :href="route('transactions.index')" :active="request()->routeIs('transactions.index')">
-                        {{ __('📜 ประวัติ') }}
-                    </x-nav-link>
-
-                    {{-- 5. แอดมิน (เฉพาะ admin) --}}
-                    @if(auth()->user()->role === 'admin')
-                    <x-dropdown align="left" width="48">
-                        <x-slot name="trigger">
-                            <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                                <div>⚙️ แอดมิน</div>
-                                <div class="ms-1">
-                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                                </div>
-                            </button>
-                        </x-slot>
-                        <x-slot name="content">
-                            <x-dropdown-link :href="route('locations.index')">📍 จัดการสถานที่</x-dropdown-link>
-                        </x-slot>
-                    </x-dropdown>
-                    @endif
-                </div>
+    {{-- Logo / Brand --}}
+    <div class="px-6 py-5 border-b border-slate-700">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black text-lg shadow-lg">
+                W
             </div>
-
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->name }}</div>
-                            <div class="ms-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                            </div>
-                        </button>
-                    </x-slot>
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('profile.edit')">{{ __('Profile') }}</x-dropdown-link>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">{{ __('Log Out') }}</x-dropdown-link>
-                        </form>
-                    </x-slot>
-                </x-dropdown>
-            </div>
-
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{ 'hidden': open, 'inline-flex': !open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{ 'hidden': !open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+            <div>
+                <h1 class="font-bold text-lg leading-tight">WMS System</h1>
+                <p class="text-xs text-slate-400">Warehouse Management</p>
             </div>
         </div>
     </div>
 
-    {{-- Mobile Menu --}}
-    <div :class="{ 'block': open, 'hidden': !open }" class="hidden sm:hidden bg-white border-t border-gray-100">
-        <div class="pt-2 pb-3 space-y-1">
-            <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">📊 ภาพรวม</div>
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">🏠 แดชบอร์ด</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('inventory.map')" :active="request()->routeIs('inventory.map')">🗺️ แผนผังคลัง</x-responsive-nav-link>
+    {{-- Navigation --}}
+    <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
 
-            <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">📦 สินค้า</div>
-            <x-responsive-nav-link :href="route('inventory.index')" :active="request()->routeIs('inventory.index')">📋 สต็อกสินค้า</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('products.create')" :active="request()->routeIs('products.create')">➕ เพิ่มสินค้าใหม่</x-responsive-nav-link>
+        {{-- เมนูหลัก --}}
+        <p class="px-3 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">เมนูหลัก</p>
 
-            <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">🔄 งานคลัง</div>
-            <x-responsive-nav-link :href="route('scanner.index')">📷 สแกนรับ/เบิกสินค้า</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('transfer.create')">🚚 ย้ายตำแหน่ง</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('transfer.pending')">📥 รอรับของ (Transit)</x-responsive-nav-link>
+        <a href="{{ route('dashboard') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('dashboard') ? 'bg-blue-600 text-white shadow-md' : 'text-slate-300 hover:bg-slate-700 hover:text-white' }}">
+            <span class="w-5 text-center">🏠</span> แดชบอร์ด
+        </a>
 
-            <div class="pt-4 pb-1 border-t border-gray-200">
-                <x-responsive-nav-link :href="route('transactions.index')" :active="request()->routeIs('transactions.index')">📜 ประวัติธุรกรรม</x-responsive-nav-link>
+        <a href="{{ route('inventory.map') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('inventory.map') ? 'bg-blue-600 text-white shadow-md' : 'text-slate-300 hover:bg-slate-700 hover:text-white' }}">
+            <span class="w-5 text-center">🗺️</span> แผนผังคลัง
+        </a>
+
+        {{-- สินค้า --}}
+        <p class="px-3 text-xs font-bold text-slate-500 uppercase tracking-wider mt-6 mb-2">สินค้า</p>
+
+        <a href="{{ route('inventory.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('inventory.index') ? 'bg-blue-600 text-white shadow-md' : 'text-slate-300 hover:bg-slate-700 hover:text-white' }}">
+            <span class="w-5 text-center">📦</span> สต็อกสินค้า
+        </a>
+
+        <a href="{{ route('products.create') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('products.create') ? 'bg-blue-600 text-white shadow-md' : 'text-slate-300 hover:bg-slate-700 hover:text-white' }}">
+            <span class="w-5 text-center">➕</span> เพิ่มสินค้าใหม่
+        </a>
+
+        {{-- งานคลัง --}}
+        <p class="px-3 text-xs font-bold text-slate-500 uppercase tracking-wider mt-6 mb-2">งานคลัง</p>
+
+        <a href="{{ route('scanner.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('scanner.index') ? 'bg-blue-600 text-white shadow-md' : 'text-slate-300 hover:bg-slate-700 hover:text-white' }}">
+            <span class="w-5 text-center">📷</span> สแกนรับ/เบิก
+        </a>
+
+        <a href="{{ route('transfer.create') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('transfer.create') ? 'bg-blue-600 text-white shadow-md' : 'text-slate-300 hover:bg-slate-700 hover:text-white' }}">
+            <span class="w-5 text-center">🚚</span> ย้ายตำแหน่ง
+        </a>
+
+        <a href="{{ route('transfer.pending') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('transfer.pending') ? 'bg-blue-600 text-white shadow-md' : 'text-slate-300 hover:bg-slate-700 hover:text-white' }}">
+            <span class="w-5 text-center">📥</span> รอรับของ (Transit)
+        </a>
+
+        {{-- รายงาน --}}
+        <p class="px-3 text-xs font-bold text-slate-500 uppercase tracking-wider mt-6 mb-2">รายงาน</p>
+
+        <a href="{{ route('transactions.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('transactions.index') ? 'bg-blue-600 text-white shadow-md' : 'text-slate-300 hover:bg-slate-700 hover:text-white' }}">
+            <span class="w-5 text-center">📜</span> ประวัติธุรกรรม
+        </a>
+
+        {{-- แอดมิน --}}
+        @if(auth()->user()->role === 'admin')
+        <p class="px-3 text-xs font-bold text-slate-500 uppercase tracking-wider mt-6 mb-2">แอดมิน</p>
+
+        <a href="{{ route('locations.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('locations.*') ? 'bg-blue-600 text-white shadow-md' : 'text-slate-300 hover:bg-slate-700 hover:text-white' }}">
+            <span class="w-5 text-center">📍</span> จัดการสถานที่
+        </a>
+        @endif
+
+    </nav>
+
+    {{-- Bottom User Info --}}
+    <div class="border-t border-slate-700 px-4 py-4">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
             </div>
-
-            @if(auth()->user()->role === 'admin')
-            <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">⚙️ แอดมิน</div>
-            <x-responsive-nav-link :href="route('locations.index')">📍 จัดการสถานที่</x-responsive-nav-link>
-            @endif
-        </div>
-
-        <div class="pt-4 pb-1 border-t border-gray-200">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
-            </div>
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">{{ __('Profile') }}</x-responsive-nav-link>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-responsive-nav-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">{{ __('Log Out') }}</x-responsive-nav-link>
-                </form>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-white truncate">{{ Auth::user()->name }}</p>
+                <p class="text-xs text-slate-400 truncate">{{ Auth::user()->email }}</p>
             </div>
         </div>
     </div>
-</nav>
+</aside>
