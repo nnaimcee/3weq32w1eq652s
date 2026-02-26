@@ -9,7 +9,8 @@
                 </div>
 
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex items-center">
-                    
+
+                    {{-- 1. ภาพรวม --}}
                     <x-dropdown align="left" width="48">
                         <x-slot name="trigger">
                             <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
@@ -20,11 +21,12 @@
                             </button>
                         </x-slot>
                         <x-slot name="content">
-                            <x-dropdown-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">แดชบอร์ด</x-dropdown-link>
-                            <x-dropdown-link :href="route('inventory.map')" :active="request()->routeIs('inventory.map')">แผนผังคลังสินค้า</x-dropdown-link>
+                            <x-dropdown-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">🏠 แดชบอร์ด</x-dropdown-link>
+                            <x-dropdown-link :href="route('inventory.map')" :active="request()->routeIs('inventory.map')">🗺️ แผนผังคลังสินค้า</x-dropdown-link>
                         </x-slot>
                     </x-dropdown>
 
+                    {{-- 2. สินค้า --}}
                     <x-dropdown align="left" width="48">
                         <x-slot name="trigger">
                             <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
@@ -35,11 +37,12 @@
                             </button>
                         </x-slot>
                         <x-slot name="content">
-                            <x-dropdown-link :href="route('inventory.index')" :active="request()->routeIs('inventory.index')">สต็อกสินค้า</x-dropdown-link>
-                            <x-dropdown-link :href="route('products.create')" :active="request()->routeIs('products.create')">เพิ่มสินค้าใหม่</x-dropdown-link>
+                            <x-dropdown-link :href="route('inventory.index')" :active="request()->routeIs('inventory.index')">📋 สต็อกสินค้า</x-dropdown-link>
+                            <x-dropdown-link :href="route('products.create')" :active="request()->routeIs('products.create')">➕ เพิ่มสินค้าใหม่</x-dropdown-link>
                         </x-slot>
                     </x-dropdown>
 
+                    {{-- 3. งานคลัง (รวม scanner เป็นหลัก) --}}
                     <x-dropdown align="left" width="48">
                         <x-slot name="trigger">
                             <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
@@ -50,17 +53,17 @@
                             </button>
                         </x-slot>
                         <x-slot name="content">
-                            <x-dropdown-link :href="route('inbound.create')">📥 รับของเข้า</x-dropdown-link>
-                            <x-dropdown-link :href="route('outbound.create')">📤 เบิกของออก</x-dropdown-link>
+                            <x-dropdown-link :href="route('scanner.index')">📷 สแกนรับ/เบิกสินค้า</x-dropdown-link>
                             <x-dropdown-link :href="route('transfer.create')">🚚 ย้ายตำแหน่ง</x-dropdown-link>
-                            <x-dropdown-link :href="route('scanner.index')">📷 สแกนด้วยกล้อง</x-dropdown-link>
                         </x-slot>
                     </x-dropdown>
 
+                    {{-- 4. ประวัติ --}}
                     <x-nav-link :href="route('transactions.index')" :active="request()->routeIs('transactions.index')">
                         {{ __('📜 ประวัติ') }}
                     </x-nav-link>
 
+                    {{-- 5. แอดมิน (เฉพาะ admin) --}}
                     @if(auth()->user()->role === 'admin')
                     <x-dropdown align="left" width="48">
                         <x-slot name="trigger">
@@ -110,28 +113,27 @@
         </div>
     </div>
 
+    {{-- Mobile Menu --}}
     <div :class="{ 'block': open, 'hidden': !open }" class="hidden sm:hidden bg-white border-t border-gray-100">
         <div class="pt-2 pb-3 space-y-1">
-            <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">📊 Overview</div>
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">แดชบอร์ด</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('inventory.map')" :active="request()->routeIs('inventory.map')">แผนผังคลัง</x-responsive-nav-link>
+            <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">📊 ภาพรวม</div>
+            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">🏠 แดชบอร์ด</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('inventory.map')" :active="request()->routeIs('inventory.map')">🗺️ แผนผังคลัง</x-responsive-nav-link>
 
-            <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">📦 Products</div>
-            <x-responsive-nav-link :href="route('inventory.index')" :active="request()->routeIs('inventory.index')">สต็อกสินค้า</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('products.create')" :active="request()->routeIs('products.create')">เพิ่มสินค้าใหม่</x-responsive-nav-link>
+            <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">📦 สินค้า</div>
+            <x-responsive-nav-link :href="route('inventory.index')" :active="request()->routeIs('inventory.index')">📋 สต็อกสินค้า</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('products.create')" :active="request()->routeIs('products.create')">➕ เพิ่มสินค้าใหม่</x-responsive-nav-link>
 
-            <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">🔄 Transactions</div>
-            <x-responsive-nav-link :href="route('inbound.create')">รับของเข้า</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('outbound.create')">เบิกของออก</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('transfer.create')">ย้ายตำแหน่ง</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('scanner.index')">📷 สแกนด้วยกล้อง</x-responsive-nav-link>
+            <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">🔄 งานคลัง</div>
+            <x-responsive-nav-link :href="route('scanner.index')">📷 สแกนรับ/เบิกสินค้า</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('transfer.create')">🚚 ย้ายตำแหน่ง</x-responsive-nav-link>
 
             <div class="pt-4 pb-1 border-t border-gray-200">
                 <x-responsive-nav-link :href="route('transactions.index')" :active="request()->routeIs('transactions.index')">📜 ประวัติธุรกรรม</x-responsive-nav-link>
             </div>
 
             @if(auth()->user()->role === 'admin')
-            <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">⚙️ Admin</div>
+            <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">⚙️ แอดมิน</div>
             <x-responsive-nav-link :href="route('locations.index')">📍 จัดการสถานที่</x-responsive-nav-link>
             @endif
         </div>
