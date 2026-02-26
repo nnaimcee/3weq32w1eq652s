@@ -22,9 +22,12 @@ class InventoryController extends Controller
             ->withSum(['stocks as transit_quantity' => function($q) use ($transitLocationIds) {
                 $q->whereIn('location_id', $transitLocationIds);
             }], 'quantity')
+            ->with(['stocks' => function($q) {
+                $q->where('quantity', '>', 0)->with('location')->orderBy('received_date', 'asc');
+            }])
             ->get();
 
-        return view('inventory.index', compact('products'));
+        return view('inventory.index', compact('products', 'transitLocationIds'));
     }
 
     public function warehouseMap()
