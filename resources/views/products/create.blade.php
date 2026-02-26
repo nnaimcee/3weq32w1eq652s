@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">✨ เพิ่มสินค้าใหม่ & สร้างบาร์โค้ด</h2>
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">✨ เพิ่มสินค้าใหม่ & สร้างบาร์โค้ด + QR Code</h2>
     </x-slot>
 
     <div class="py-12">
@@ -37,7 +37,26 @@
 
                         <button type="button" onclick="printSticker()"
                             class="mt-4 bg-gray-800 text-white px-6 py-2 rounded-full hover:bg-black flex items-center gap-2">
-                            🖨️ พิมพ์สติกเกอร์
+                            🖨️ พิมพ์สติกเกอร์ Barcode
+                        </button>
+                    </div>
+
+                    {{-- QR Code Preview --}}
+                    <div
+                        class="mt-6 p-6 bg-indigo-50 rounded-xl border-2 border-dashed border-indigo-300 flex flex-col items-center">
+                        <h3 class="text-sm font-bold text-indigo-500 mb-4 uppercase">ตัวอย่าง QR Code (Preview)</h3>
+                        <div id="printableQrSticker" class="bg-white p-4 border shadow-sm text-center flex flex-col items-center justify-center"
+                            style="width: 50mm; height: 50mm;">
+                            <div class="text-[10px] font-bold truncate mb-1 w-full" id="preview_name_qr">Product Name</div>
+                            <div id="qr_container" class="flex justify-center mb-1">
+                                {!! DNS2D::getBarcodeHTML('12345678', 'QRCODE', 4, 4) !!}
+                            </div>
+                            <div class="text-[10px] font-mono" id="preview_sku_qr">{{ $nextSku }}</div>
+                        </div>
+
+                        <button type="button" onclick="printQrSticker()"
+                            class="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-800 flex items-center gap-2">
+                            📱 พิมพ์สติกเกอร์ QR Code
                         </button>
                     </div>
 
@@ -54,16 +73,19 @@
 
     <script>
         // Update Preview Real-time
-        document.getElementById('p_name').addEventListener('input', e => document.getElementById('preview_name').innerText =
-            e.target.value);
-        document.getElementById('p_sku').addEventListener('input', e => document.getElementById('preview_sku').innerText = e
-            .target.value);
+        document.getElementById('p_name').addEventListener('input', e => {
+            document.getElementById('preview_name').innerText = e.target.value;
+            document.getElementById('preview_name_qr').innerText = e.target.value;
+        });
+        document.getElementById('p_sku').addEventListener('input', e => {
+            document.getElementById('preview_sku').innerText = e.target.value;
+            document.getElementById('preview_sku_qr').innerText = e.target.value;
+        });
 
         function printSticker() {
             const printContent = document.getElementById('printableSticker').outerHTML;
             const originalContent = document.body.innerHTML;
 
-            // ปรับแต่ง CSS สำหรับการพิมพ์สติกเกอร์โดยเฉพาะ
             document.body.innerHTML = `
                 <style>
                     @page { size: 50mm 30mm; margin: 0; }
@@ -73,7 +95,22 @@
             `;
 
             window.print();
-            location.reload(); // รีโหลดหน้าเพื่อกลับมาสถานะปกติ
+            location.reload();
+        }
+
+        function printQrSticker() {
+            const printContent = document.getElementById('printableQrSticker').outerHTML;
+
+            document.body.innerHTML = `
+                <style>
+                    @page { size: 50mm 50mm; margin: 0; }
+                    body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+                </style>
+                ${printContent}
+            `;
+
+            window.print();
+            location.reload();
         }
     </script>
 </x-app-layout>

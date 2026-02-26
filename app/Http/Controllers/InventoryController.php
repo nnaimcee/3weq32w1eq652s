@@ -33,16 +33,22 @@ class InventoryController extends Controller
 
     // 2. เช็คว่าสินค้าตัวนี้มีรูปบาร์โค้ดบันทึกไว้ไหม
     if ($product->barcode_image) {
-        // เช็คให้ชัวร์ว่ามีไฟล์นี้อยู่ในโฟลเดอร์จริงๆ แล้วทำการลบไฟล์ทิ้ง
         if (Storage::disk('public')->exists('barcodes/' . $product->barcode_image)) {
             Storage::disk('public')->delete('barcodes/' . $product->barcode_image);
         }
     }
 
-    // 3. ลบข้อมูลสินค้าออกจาก Database
+    // 3. เช็คว่ามีรูป QR Code ไหม ถ้ามีก็ลบทิ้ง
+    if ($product->qr_code_image) {
+        if (Storage::disk('public')->exists('qrcodes/' . $product->qr_code_image)) {
+            Storage::disk('public')->delete('qrcodes/' . $product->qr_code_image);
+        }
+    }
+
+    // 4. ลบข้อมูลสินค้าออกจาก Database
     $product->delete();
 
-    // 4. เด้งกลับไปหน้าเดิมพร้อมข้อความแจ้งเตือน
-    return redirect()->route('inventory.index')->with('success', 'ลบรายการสินค้าและไฟล์รูปบาร์โค้ดเรียบร้อยแล้ว!');
+    // 5. เด้งกลับไปหน้าเดิมพร้อมข้อความแจ้งเตือน
+    return redirect()->route('inventory.index')->with('success', 'ลบรายการสินค้าและไฟล์รูปบาร์โค้ด + QR Code เรียบร้อยแล้ว!');
 }
 }

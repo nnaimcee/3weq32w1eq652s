@@ -20,6 +20,7 @@
                                     <th class="p-3 border">ถูกจอง (Reserve)</th>
                                     <th class="p-3 border text-green-600">คงเหลือพร้อมจ่าย</th>
                                     <th class="p-3 border">พิมพ์สติกเกอร์</th>
+                                    <th class="p-3 border">QR Code</th>
                                     <th class="p-3 border">จัดการ</th>
                                 </tr>
                             </thead>
@@ -52,6 +53,25 @@
                                                     onclick="printStickerDirect('{{ addslashes($product->name) }}', '{{ $product->sku }}', '{{ $product->id }}')"
                                                     class="bg-gray-800 hover:bg-black text-white py-1 px-4 rounded-full text-xs shadow-sm transition">
                                                     🖨️ พิมพ์
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td class="p-3 border">
+                                            <div class="flex flex-col items-center justify-center gap-2">
+                                                @if($product->qr_code_image)
+                                                    <img id="qrcode-img-{{ $product->id }}" 
+                                                         src="{{ asset('storage/qrcodes/' . $product->qr_code_image) }}" 
+                                                         style="height: 50px; width: 50px;" 
+                                                         alt="QR Code"
+                                                         class="border rounded">
+                                                @else
+                                                    <span class="text-xs text-red-500 font-bold bg-red-100 px-2 py-1 rounded">ไม่มี QR</span>
+                                                @endif
+
+                                                <button type="button" 
+                                                    onclick="printQrStickerDirect('{{ addslashes($product->name) }}', '{{ $product->sku }}', '{{ $product->id }}')"
+                                                    class="bg-indigo-600 hover:bg-indigo-800 text-white py-1 px-4 rounded-full text-xs shadow-sm transition">
+                                                    📱 พิมพ์ QR
                                                 </button>
                                             </div>
                                         </td>
@@ -205,6 +225,39 @@
                 window.print();
                 window.location.reload();
             }, 200); 
+        }
+
+        function printQrStickerDirect(name, sku, productId) {
+            const imgElement = document.getElementById(`qrcode-img-${productId}`);
+            
+            if (!imgElement) {
+                alert("❌ ไม่พบรูปภาพ QR Code สำหรับสินค้านี้ (อาจต้องบันทึกสินค้าใหม่)");
+                return;
+            }
+
+            const imgSrc = imgElement.src;
+
+            const printContent = `
+                <div style="width: 50mm; height: 50mm; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; box-sizing: border-box; padding: 5px;">
+                    <div style="font-size: 14px; font-weight: 600; font-family: sans-serif; margin-bottom: 4px; white-space: nowrap; overflow: hidden; width: 100%; color: black;">${name}</div>
+                    <img src="${imgSrc}" style="width: 30mm; height: 30mm; margin-bottom: 4px; image-rendering: pixelated;">
+                    <div style="font-size: 12px; font-family: monospace; font-weight: 500; color: black;">${sku}</div>
+                </div>
+            `;
+
+            document.body.innerHTML = `
+                <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact; }
+                    @page { size: 50mm 50mm; margin: 0; }
+                    body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: white; }
+                </style>
+                ${printContent}
+            `;
+
+            setTimeout(() => {
+                window.print();
+                window.location.reload();
+            }, 200);
         }
     </script>
 </x-app-layout>

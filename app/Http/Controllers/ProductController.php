@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use Illuminate\Support\Facades\Storage;
 use Milon\Barcode\Facades\DNS1DFacade as DNS1D;
+use Milon\Barcode\Facades\DNS2DFacade as DNS2D;
 
 class ProductController extends Controller
 {
@@ -16,6 +17,13 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
         
         return view('products.barcode', compact('product'));
+    }
+
+    // ฟังก์ชันสำหรับหน้าพิมพ์ QR Code
+    public function printQrCode($id)
+    {
+        $product = Product::findOrFail($id);
+        return view('products.qrcode', compact('product'));
     }
     
     public function create()
@@ -54,16 +62,22 @@ class ProductController extends Controller
         // 3. เซฟไฟล์ภาพลงในโฟลเดอร์ storage/app/public/barcodes/
         Storage::disk('public')->put('barcodes/' . $imageName, base64_decode($barcodeBase64));
 
-        // 4. บันทึกข้อมูลทั้งหมด (รวมถึงชื่อไฟล์รูป) ลงฐานข้อมูล
+        // 4. สร้าง QR Code เป็นไฟล์ภาพ PNG
+        $qrImageName = 'qrcode_' . $request->sku . '.png';
+        $qrBase64 = DNS2D::getBarcodePNG($barcode, 'QRCODE', 6, 6);
+        Storage::disk('public')->put('qrcodes/' . $qrImageName, base64_decode($qrBase64));
+
+        // 5. บันทึกข้อมูลทั้งหมด (รวมถึงชื่อไฟล์รูป) ลงฐานข้อมูล
         Product::create([
             'name' => $request->name,
             'sku' => $request->sku,
             'barcode' => $barcode,
             'min_stock' => $request->min_stock ?? 0,
-            'barcode_image' => $imageName, // ตรงนี้จะทำงานได้เพราะเราแก้ Model ในจุดที่ 1 แล้ว
+            'barcode_image' => $imageName,
+            'qr_code_image' => $qrImageName,
         ]);
 
-        return redirect()->route('inventory.index')->with('success', 'เพิ่มสินค้าและสร้างรูปบาร์โค้ดอัตโนมัติเรียบร้อย!');
+        return redirect()->route('inventory.index')->with('success', 'เพิ่มสินค้าและสร้างรูปบาร์โค้ด + QR Code อัตโนมัติเรียบร้อย!');
     }
 
     public function getByBarcode($barcode)
