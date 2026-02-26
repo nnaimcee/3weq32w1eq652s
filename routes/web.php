@@ -51,8 +51,9 @@ Route::get('/dashboard', function () {
         $currentStock = $product->stocks_sum_quantity ?? 0;
         // สินค้าหมดสต็อก
         if ($currentStock <= 0) return true;
-        // สินค้าต่ำกว่าขั้นต่ำ
-        if ($product->min_stock > 0 && $currentStock <= $product->min_stock) return true;
+        // สินค้าต่ำกว่า 50 ชิ้น (ตามที่กำหนด)
+        if ($currentStock <= 50) return true;
+        
         return false;
     })->sortBy('stocks_sum_quantity');
     $lowStockCount = $lowStockProducts->count();

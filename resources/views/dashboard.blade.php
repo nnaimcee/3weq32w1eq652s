@@ -82,7 +82,7 @@
                                     @foreach($lowStockProducts as $lp)
                                     @php
                                         $currentStock = $lp->stocks_sum_quantity ?? 0;
-                                        $minStock = $lp->min_stock > 0 ? $lp->min_stock : 10;
+                                        $minStock = 50; // กำหนดขั้นต่ำเป็น 50 ตาม Backend
                                         $percentage = round(($currentStock / $minStock) * 100);
                                         $barColor = $currentStock <= 0 ? 'bg-red-600' : ($percentage <= 25 ? 'bg-red-500' : ($percentage <= 50 ? 'bg-orange-500' : 'bg-yellow-500'));
                                         $isOutOfStock = $currentStock <= 0;
