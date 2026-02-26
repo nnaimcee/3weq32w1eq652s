@@ -107,6 +107,13 @@ Route::post('/reservation/release', [App\Http\Controllers\ReservationController:
 // API Route สำหรับดึงข้อมูลสินค้าที่อยู่ใน Location ที่ถูกคลิก (ใช้ในแผนที่คลังสินค้า)
 Route::get('/api/locations/{id}/items', [App\Http\Controllers\LocationController::class, 'getItems']);
 
+// Routes สำหรับจัดการสถานที่ (เฉพาะ Admin)
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/locations', [App\Http\Controllers\LocationController::class, 'index'])->name('locations.index');
+    Route::post('/locations', [App\Http\Controllers\LocationController::class, 'store'])->name('locations.store');
+    Route::put('/locations/{id}', [App\Http\Controllers\LocationController::class, 'update'])->name('locations.update');
+    Route::delete('/locations/{id}', [App\Http\Controllers\LocationController::class, 'destroy'])->name('locations.destroy');
+});
 
 // --- IGNORE --- (ส่วนนี้เป็นโค้ดที่ Laravel สร้างมาให้แล้ว ไม่ต้องแก้ไข)
 Route::middleware('auth')->group(function () {
