@@ -16,8 +16,9 @@
                                 <tr class="bg-gray-200" align="center">
                                     <th class="p-3 border">Barcode</th>
                                     <th class="p-3 border">ชื่อสินค้า</th>
-                                    <th class="p-3 border">สต็อกทั้งหมด</th>
+                                    <th class="p-3 border">สต็อกในคลัง</th>
                                     <th class="p-3 border">ถูกจอง (Reserve)</th>
+                                    <th class="p-3 border text-orange-500">ระหว่างทาง</th>
                                     <th class="p-3 border text-green-600">คงเหลือพร้อมจ่าย</th>
                                     <th class="p-3 border">พิมพ์สติกเกอร์</th>
                                     <th class="p-3 border">QR Code</th>
@@ -34,6 +35,13 @@
                                         </td>
                                         <td class="p-3 border text-red-500">
                                             {{ number_format($product->stocks_sum_reserved_qty ?? 0) }}
+                                        </td>
+                                        <td class="p-3 border text-orange-500 font-bold">
+                                            @if(($product->transit_quantity ?? 0) > 0)
+                                                🚚 {{ number_format($product->transit_quantity ?? 0) }}
+                                            @else
+                                                -
+                                            @endif
                                         </td>
                                         <td class="p-3 border text-green-600 font-bold">
                                             {{ number_format(($product->stocks_sum_quantity ?? 0) - ($product->stocks_sum_reserved_qty ?? 0)) }}

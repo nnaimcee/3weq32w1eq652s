@@ -30,9 +30,14 @@ class OutboundController extends Controller
         $requestedQty = $request->quantity;
 
         // 1. เช็คก่อนว่ามีสต็อกรวมพอให้เบิกไหม?
-        // ต้องหักลบจำนวนที่ถูกจอง (reserved_qty) ออกด้วย
-        $totalStock = Stock::where('product_id', $product->id)->sum('quantity');
-        $totalReserved = Stock::where('product_id', $product->id)->sum('reserved_qty');
+        // ต้องหักลบจำนวนที่ถูกจอง (reserved_qty) และไม่นับสต็อกที่อยู่ใน Transit
+        $transitLocationIds = \App\Models\Location::where('type', 'transit')->pluck('id');
+        $totalStock = Stock::where('product_id', $product->id)
+            ->whereNotIn('location_id', $transitLocationIds)
+            ->sum('quantity');
+        $totalReserved = Stock::where('product_id', $product->id)
+            ->whereNotIn('location_id', $transitLocationIds)
+            ->sum('reserved_qty');
         
         $availableStock = $totalStock - $totalReserved;
 

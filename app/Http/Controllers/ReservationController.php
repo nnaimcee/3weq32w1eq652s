@@ -21,10 +21,14 @@ class ReservationController extends Controller
         $product = Product::findOrFail($request->product_id);
         $requestedQty = $request->quantity;
 
-        // 1. เช็คว่ามีของ "ว่างพร้อมจอง" พอไหม
-        // (total_quantity - total_reserved) >= requested
-        $totalStock = Stock::where('product_id', $product->id)->sum('quantity');
-        $totalReserved = Stock::where('product_id', $product->id)->sum('reserved_qty');
+        // 1. เช็คว่ามีของ "ว่างพร้อมจอง" พอไหม (ไม่นับสต็อกใน Transit)
+        $transitLocationIds = \App\Models\Location::where('type', 'transit')->pluck('id');
+        $totalStock = Stock::where('product_id', $product->id)
+            ->whereNotIn('location_id', $transitLocationIds)
+            ->sum('quantity');
+        $totalReserved = Stock::where('product_id', $product->id)
+            ->whereNotIn('location_id', $transitLocationIds)
+            ->sum('reserved_qty');
         $availableToReserve = $totalStock - $totalReserved;
 
         if ($availableToReserve < $requestedQty) {
@@ -35,6 +39,7 @@ class ReservationController extends Controller
             // 2. ดึง Lot ที่ยังมีของเหลือ และยังจองไม่เต็ม
             // เรียงตาม FIFO (received_date ASC)
             $stocks = Stock::where('product_id', $product->id)
+                ->whereNotIn('location_id', $transitLocationIds)
                 ->whereRaw('quantity > reserved_qty') // เอาเฉพาะที่มีของว่างจริง
                 ->orderBy('received_date', 'asc')
                 ->get();

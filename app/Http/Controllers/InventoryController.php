@@ -10,7 +10,20 @@ class InventoryController extends Controller
 {
     public function index()
     {
-        $products = Product::withSum('stocks', 'quantity')->withSum('stocks', 'reserved_qty')->get();
+        // ดึง transit location IDs เพื่อ exclude จากยอดพร้อมจ่าย
+        $transitLocationIds = \App\Models\Location::where('type', 'transit')->pluck('id');
+
+        $products = Product::withSum(['stocks as stocks_sum_quantity' => function($q) use ($transitLocationIds) {
+                $q->whereNotIn('location_id', $transitLocationIds);
+            }], 'quantity')
+            ->withSum(['stocks as stocks_sum_reserved_qty' => function($q) use ($transitLocationIds) {
+                $q->whereNotIn('location_id', $transitLocationIds);
+            }], 'reserved_qty')
+            ->withSum(['stocks as transit_quantity' => function($q) use ($transitLocationIds) {
+                $q->whereIn('location_id', $transitLocationIds);
+            }], 'quantity')
+            ->get();
+
         return view('inventory.index', compact('products'));
     }
 

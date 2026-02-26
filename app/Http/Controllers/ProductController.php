@@ -82,10 +82,19 @@ class ProductController extends Controller
 
     public function getByBarcode($barcode)
     {
-        // ค้นหาสินค้าจากเลขบาร์โค้ด
+        $transitLocationIds = \App\Models\Location::where('type', 'transit')->pluck('id');
+
+        // ค้นหาสินค้าจากเลขบาร์โค้ด — exclude สต็อกที่อยู่ใน Transit
         $product = \App\Models\Product::where('barcode', $barcode)
-            ->withSum('stocks', 'quantity')
-            ->withSum('stocks', 'reserved_qty')
+            ->withSum(['stocks as stocks_sum_quantity' => function($q) use ($transitLocationIds) {
+                $q->whereNotIn('location_id', $transitLocationIds);
+            }], 'quantity')
+            ->withSum(['stocks as stocks_sum_reserved_qty' => function($q) use ($transitLocationIds) {
+                $q->whereNotIn('location_id', $transitLocationIds);
+            }], 'reserved_qty')
+            ->withSum(['stocks as transit_quantity' => function($q) use ($transitLocationIds) {
+                $q->whereIn('location_id', $transitLocationIds);
+            }], 'quantity')
             ->first();
 
         if ($product) {
@@ -97,6 +106,7 @@ class ProductController extends Controller
                     'sku' => $product->sku,
                     'total_stock' => $product->stocks_sum_quantity ?? 0,
                     'reserved' => $product->stocks_sum_reserved_qty ?? 0,
+                    'in_transit' => $product->transit_quantity ?? 0,
                 ]
             ]);
         }
