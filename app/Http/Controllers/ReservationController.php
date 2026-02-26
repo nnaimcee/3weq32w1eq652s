@@ -35,7 +35,7 @@ class ReservationController extends Controller
             return back()->withErrors(['สินค้ามีไม่พอให้จอง! (เหลือว่างรับจองแค่ ' . number_format($availableToReserve) . ' ชิ้น)']);
         }
 
-        DB::transaction(function () use ($product, $requestedQty) {
+        DB::transaction(function () use ($product, $requestedQty, $transitLocationIds) {
             // 2. ดึง Lot ที่ยังมีของเหลือ และยังจองไม่เต็ม
             // เรียงตาม FIFO (received_date ASC)
             $stocks = Stock::where('product_id', $product->id)
