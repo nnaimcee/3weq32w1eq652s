@@ -68,9 +68,31 @@
 
                 {{-- ตารางรายการสถานที่ --}}
                 <div class="lg:col-span-2">
+                    {{-- Search Bar --}}
+                    <div class="mb-4 bg-white p-4 rounded-xl shadow border border-gray-200">
+                        <form action="{{ route('locations.index') }}" method="GET" class="flex flex-col sm:flex-row gap-3">
+                            <div class="flex-1 relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-500">🔍</span>
+                                </div>
+                                <input type="text" name="search" value="{{ request('search') }}" placeholder="ค้นหาชื่อสถานที่ หรือ Zone..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                            </div>
+                            <div class="flex gap-2">
+                                <button type="submit" class="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-6 rounded-lg shadow transition w-full sm:w-auto text-sm">
+                                    ค้นหา
+                                </button>
+                                @if(request('search'))
+                                    <a href="{{ route('locations.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg shadow transition flex items-center justify-center w-full sm:w-auto text-sm">
+                                        ล้าง
+                                    </a>
+                                @endif
+                            </div>
+                        </form>
+                    </div>
+
                     <div class="bg-white shadow-lg rounded-2xl overflow-hidden">
                         <div class="p-4 bg-gray-50 border-b flex items-center justify-between">
-                            <h3 class="font-bold text-gray-700">📋 รายการสถานที่ทั้งหมด ({{ $locations->count() }} แห่ง)</h3>
+                            <h3 class="font-bold text-gray-700">📋 รายการสถานที่ ({{ $locations->total() }} แห่ง)</h3>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm text-left">
@@ -185,6 +207,11 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                    
+                    {{-- Pagination --}}
+                    <div class="mt-4">
+                        {{ $locations->appends(request()->query())->links() }}
                     </div>
                 </div>
             </div>

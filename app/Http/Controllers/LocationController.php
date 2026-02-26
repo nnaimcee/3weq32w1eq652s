@@ -36,13 +36,20 @@ class LocationController extends Controller
     // ======== Admin Functions ========
 
     // แสดงรายการสถานที่ทั้งหมด
-    public function index()
+    public function index(Request $request)
     {
-        $locations = Location::withCount('stocks')
+        $query = Location::withCount('stocks')
             ->withSum('stocks', 'quantity')
             ->orderBy('zone')
-            ->orderBy('name')
-            ->get();
+            ->orderBy('name');
+
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where('name', 'like', "%{$search}%")
+                  ->orWhere('zone', 'like', "%{$search}%");
+        }
+
+        $locations = $query->paginate(20);
 
         return view('locations.index', compact('locations'));
     }
