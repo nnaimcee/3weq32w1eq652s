@@ -189,4 +189,25 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+
+Route::get('/setup-admin', function () {
+    $user = User::create([
+        'name' => 'Admin WMS',
+        'email' => 'admin@wms.com',
+        'password' => Hash::make('password'),
+    ]);
+
+    return "Create Admin User Success";
+});
+
+Route::get('/setup-staff', function () {
+    $user = User::create([
+        'name' => 'Staff WMS',
+        'email' => 'staff@wms.com',
+        'password' => Hash::make('password'),
+    ]);
+
+    return "Create Staff User Success";
+});
+
 require __DIR__.'/auth.php';
