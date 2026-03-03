@@ -49,7 +49,7 @@
             </div>
 
             {{-- Legend --}}
-            <div class="bg-white p-4 rounded-xl shadow mb-6 flex flex-wrap justify-center gap-6 border border-gray-200">
+            <div class="bg-white p-4 rounded-xl shadow mb-6 flex flex-wrap justify-center gap-5 border border-gray-200">
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded-full bg-green-500"></span>
                     <span class="text-sm font-medium text-gray-600">ว่าง</span>
@@ -59,12 +59,16 @@
                     <span class="text-sm font-medium text-gray-600">มีสินค้า</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="w-4 h-4 rounded-full bg-orange-500"></span>
-                    <span class="text-sm font-medium text-gray-600">เต็ม</span>
+                    <span class="w-4 h-4 rounded-full bg-yellow-500"></span>
+                    <span class="text-sm font-medium text-gray-600">กันสต็อก</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="w-4 h-4 rounded-full bg-yellow-500"></span>
-                    <span class="text-sm font-medium text-gray-600">จองพื้นที่</span>
+                    <span class="w-4 h-4 rounded-full bg-purple-500"></span>
+                    <span class="text-sm font-medium text-gray-600">🔖 จองรอสินค้าเข้า</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded-full bg-orange-500"></span>
+                    <span class="text-sm font-medium text-gray-600">เต็ม</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded-full bg-red-500"></span>
@@ -100,32 +104,44 @@
                             $totalReservedLoc = $loc->stocks->sum('reserved_qty');
                             $availableLoc = $totalQty - $totalReservedLoc;
                             $productCount = $loc->stocks->where('quantity', '>', 0)->count();
+                            $capacity = $loc->capacity ?? 5000;
+                            $capacityPct = $capacity > 0 ? min(100, round($totalQty / $capacity * 100)) : 0;
+                            $capBarColor = $capacityPct >= 100 ? 'bg-red-500' : ($capacityPct >= 80 ? 'bg-orange-400' : ($capacityPct >= 50 ? 'bg-yellow-400' : 'bg-green-500'));
 
                             if ($loc->status === 'inactive') {
                                 $cardClasses = 'bg-red-50 border-red-300 text-red-900';
-                                $dotColor = 'bg-red-500';
                                 $statusLabel = 'ปิดใช้งาน';
                             } elseif ($loc->status === 'full') {
                                 $cardClasses = 'bg-orange-50 border-orange-300 text-orange-900 hover:bg-orange-100 hover:shadow-xl hover:-translate-y-1';
-                                $dotColor = 'bg-orange-500';
                                 $statusLabel = 'เต็ม';
                             } elseif ($totalQty > 0) {
                                 $cardClasses = 'bg-blue-50 border-blue-300 text-blue-900 hover:bg-blue-100 hover:shadow-xl hover:-translate-y-1';
-                                $dotColor = 'bg-blue-600';
                                 $statusLabel = 'มีสินค้า';
                             } elseif ($totalReservedLoc > 0) {
                                 $cardClasses = 'bg-yellow-50 border-yellow-300 text-yellow-900 hover:bg-yellow-100 hover:shadow-xl hover:-translate-y-1';
-                                $dotColor = 'bg-yellow-500';
-                                $statusLabel = 'จองอยู่';
+                                $statusLabel = 'กันสต็อก';
                             } else {
-                                $cardClasses = 'bg-green-50 border-green-300 text-green-900 hover:bg-green-100 hover:shadow-xl hover:-translate-y-1';
-                                $dotColor = 'bg-green-500';
-                                $statusLabel = 'ว่าง';
+                                // pending location reservation → purple, else green
+                                $hasPendingRes = isset($pendingReservations[$loc->id]);
+                                $cardClasses = $hasPendingRes
+                                    ? 'bg-purple-50 border-purple-300 text-purple-900 hover:bg-purple-100 hover:shadow-xl hover:-translate-y-1'
+                                    : 'bg-green-50 border-green-300 text-green-900 hover:bg-green-100 hover:shadow-xl hover:-translate-y-1';
+                                $statusLabel = $hasPendingRes ? 'จองรอสินค้าเข้า' : 'ว่าง';
                             }
                         @endphp
 
+                        @php $pendingRes = $pendingReservations[$loc->id] ?? null; @endphp
+
                         <div onclick="openLocationPopup({{ $loc->id }}, '{{ addslashes($loc->name) }}')"
                             class="relative group rounded-xl p-4 shadow-md transition-all duration-300 border-2 {{ $cardClasses }} flex flex-col items-center justify-between h-40 cursor-pointer overflow-hidden">
+
+                            {{-- Reservation badge --}}
+                            @if($pendingRes)
+                                <div class="absolute top-0 left-0 bg-purple-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-br-lg z-10"
+                                     title="จองพื้นที่: {{ $pendingRes->product ? $pendingRes->product->name : 'ไม่ระบุสินค้า' }}">
+                                    🔖 จอง
+                                </div>
+                            @endif
 
                             {{-- Status dots --}}
                             <div class="absolute top-2 right-2 flex gap-1">
@@ -140,7 +156,10 @@
                                     @if($totalReservedLoc > 0)
                                         <span class="w-3 h-3 rounded-full bg-yellow-500 shadow-sm" title="มีการจอง"></span>
                                     @endif
-                                    @if($totalQty <= 0 && $totalReservedLoc <= 0)
+                                    @if($pendingRes)
+                                        <span class="w-3 h-3 rounded-full bg-purple-500 shadow-sm" title="จองรอสินค้าเข้า"></span>
+                                    @endif
+                                    @if($totalQty <= 0 && $totalReservedLoc <= 0 && !$pendingRes)
                                         <span class="w-3 h-3 rounded-full bg-green-500 shadow-sm" title="ว่าง"></span>
                                     @endif
                                 @endif
@@ -154,26 +173,26 @@
                             </div>
 
                             {{-- Bottom Stats --}}
-                            <div class="w-full text-center mt-2">
-                                @if($totalQty > 0)
-                                    <div class="text-xs space-y-0.5">
-                                        <div class="flex justify-between px-1">
-                                            <span class="opacity-60">สินค้า:</span>
-                                            <span class="font-bold">{{ number_format($totalQty) }}</span>
-                                        </div>
-                                        @if($totalReservedLoc > 0)
-                                        <div class="flex justify-between px-1">
-                                            <span class="opacity-60">จอง:</span>
-                                            <span class="font-bold text-yellow-600">{{ number_format($totalReservedLoc) }}</span>
-                                        </div>
+                            <div class="w-full text-center mt-1">
+                                @if($loc->status === 'inactive')
+                                    <span class="text-xs font-bold opacity-60">ปิดใช้งาน</span>
+                                @else
+                                    {{-- Capacity bar --}}
+                                    <div class="w-full bg-black bg-opacity-10 rounded-full h-1.5 mb-1">
+                                        <div class="{{ $capBarColor }} h-1.5 rounded-full transition-all" style="width: {{ $capacityPct }}%"></div>
+                                    </div>
+                                    <div class="text-[10px] font-semibold opacity-70 tabular-nums">
+                                        {{ number_format($totalQty) }}<span class="opacity-60">/{{ number_format($capacity) }}</span>
+                                        @if($pendingRes)
+                                            <span class="ml-1 text-purple-700">(+{{ number_format($pendingRes->expected_qty) }})</span>
                                         @endif
                                     </div>
-                                @elseif($totalReservedLoc > 0)
-                                    <span class="text-xs font-bold text-yellow-600">🏷️ จอง {{ number_format($totalReservedLoc) }}</span>
-                                @else
-                                    <span class="text-xs opacity-40">พร้อมใช้งาน</span>
+                                    @if($totalReservedLoc > 0)
+                                        <div class="text-[9px] text-yellow-700 font-bold">กันไว้ {{ number_format($totalReservedLoc) }}</div>
+                                    @endif
                                 @endif
                             </div>
+
 
                             {{-- Hover Tooltip --}}
                             <div class="absolute z-20 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 bottom-full mb-3 left-1/2 transform -translate-x-1/2 w-52 bg-gray-900 text-white p-3 rounded-lg shadow-2xl text-sm pointer-events-none">

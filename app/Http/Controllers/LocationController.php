@@ -58,22 +58,24 @@ class LocationController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:100|unique:locations,name',
-            'zone' => 'nullable|string|max:50',
-            'shelf' => 'nullable|string|max:50',
-            'bin' => 'nullable|string|max:50',
-            'type' => 'required|in:storage,transit',
+            'name'     => 'required|string|max:100|unique:locations,name',
+            'zone'     => 'nullable|string|max:50',
+            'shelf'    => 'nullable|string|max:50',
+            'bin'      => 'nullable|string|max:50',
+            'type'     => 'required|in:storage,transit',
+            'capacity' => 'nullable|integer|min:1',
         ], [
             'name.unique' => 'ชื่อสถานที่นี้มีอยู่แล้วในระบบ',
         ]);
 
         Location::create([
-            'name' => $request->name,
-            'zone' => $request->zone,
-            'shelf' => $request->shelf,
-            'bin' => $request->bin,
-            'type' => $request->type,
-            'status' => 'active',
+            'name'     => $request->name,
+            'zone'     => $request->zone,
+            'shelf'    => $request->shelf,
+            'bin'      => $request->bin,
+            'type'     => $request->type,
+            'status'   => 'active',
+            'capacity' => $request->capacity ?? 5000,
         ]);
 
         return redirect()->route('locations.index')->with('success', '✅ เพิ่มสถานที่ใหม่เรียบร้อยแล้ว!');
@@ -85,23 +87,25 @@ class LocationController extends Controller
         $location = Location::findOrFail($id);
 
         $request->validate([
-            'name' => 'required|string|max:100|unique:locations,name,' . $id,
-            'zone' => 'nullable|string|max:50',
-            'shelf' => 'nullable|string|max:50',
-            'bin' => 'nullable|string|max:50',
-            'type' => 'required|in:storage,transit',
-            'status' => 'required|in:active,inactive,full',
+            'name'     => 'required|string|max:100|unique:locations,name,' . $id,
+            'zone'     => 'nullable|string|max:50',
+            'shelf'    => 'nullable|string|max:50',
+            'bin'      => 'nullable|string|max:50',
+            'type'     => 'required|in:storage,transit',
+            'status'   => 'required|in:active,inactive,full',
+            'capacity' => 'nullable|integer|min:1',
         ], [
             'name.unique' => 'ชื่อสถานที่นี้มีอยู่แล้วในระบบ',
         ]);
 
         $location->update([
-            'name' => $request->name,
-            'zone' => $request->zone,
-            'shelf' => $request->shelf,
-            'bin' => $request->bin,
-            'type' => $request->type,
-            'status' => $request->status,
+            'name'     => $request->name,
+            'zone'     => $request->zone,
+            'shelf'    => $request->shelf,
+            'bin'      => $request->bin,
+            'type'     => $request->type,
+            'status'   => $request->status,
+            'capacity' => $request->capacity ?? $location->capacity ?? 5000,
         ]);
 
         return redirect()->route('locations.index')->with('success', '✅ อัพเดทข้อมูลสถานที่เรียบร้อยแล้ว!');

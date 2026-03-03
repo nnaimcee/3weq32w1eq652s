@@ -4,6 +4,7 @@ use App\Models\Product;
 use App\Models\Stock;
 use App\Models\Transaction;
 use App\Models\Location;
+use App\Models\LocationReservation;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InventoryController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\TransferController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ScannerController;
+use App\Http\Controllers\LocationReservationController;
 
 
 // --- IGNORE --- (ส่วนนี้เป็นโค้ดที่ Laravel สร้างมาให้แล้ว ไม่ต้องแก้ไข)
@@ -71,6 +73,9 @@ Route::get('/dashboard', function () {
         ->where('status', 'pending')
         ->count();
 
+    // 10. Location reservations (pending) — จำนวนพื้นที่ที่ถูกจองรอสินค้าเข้า
+    $pendingLocationReservations = \App\Models\LocationReservation::where('status', 'pending')->count();
+
     // 10. Chart: รายการต่อวัน 7 วันล่าสุด (นับจำนวนรายการ)
     $dailyData = [];
     for ($i = 6; $i >= 0; $i--) {
@@ -96,7 +101,8 @@ Route::get('/dashboard', function () {
     return view('dashboard', compact(
         'totalProducts', 'totalStock', 'totalReserved', 'totalTransit',
         'totalAvailable', 'totalLocations', 'lowStockCount', 'lowStockProducts',
-        'recentActivities', 'pendingTransfers', 'dailyData', 'stockByZone'
+        'recentActivities', 'pendingTransfers', 'dailyData', 'stockByZone',
+        'pendingLocationReservations'
     ));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -145,6 +151,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/transfer/pending', [TransferController::class, 'pending'])->name('transfer.pending');
     Route::post('/transfer/receive', [TransferController::class, 'receive'])->name('transfer.receive');
 });
+
+// Routes สำหรับจองพื้นที่รอสินค้าเข้า (Location Reservations)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/location-reservations', [LocationReservationController::class, 'index'])->name('location-reservations.index');
+    Route::post('/location-reservations', [LocationReservationController::class, 'store'])->name('location-reservations.store');
+    Route::post('/location-reservations/{id}/cancel', [LocationReservationController::class, 'cancel'])->name('location-reservations.cancel');
+    Route::post('/location-reservations/{id}/fulfill', [LocationReservationController::class, 'fulfill'])->name('location-reservations.fulfill');
+});
+
 
 // Route สำหรับดูประวัติการทำรายการ (Transactions)
 Route::get('/transactions', [TransactionController::class, 'index'])

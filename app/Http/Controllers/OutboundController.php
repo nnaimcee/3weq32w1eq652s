@@ -46,44 +46,50 @@ class OutboundController extends Controller
         }
 
         // 2. เริ่มกระบวนการตัดสต็อกแบบ FIFO
-        DB::transaction(function () use ($product, $requestedQty) {
-            
-            // ดึงสต็อกทั้งหมดของสินค้านี้ ที่มีจำนวนมากกว่า 0 ชิ้น โดย "เรียงจากเก่าสุดไปใหม่สุด" (ASC)
+        $deductedLocationIds = [];
+
+        DB::transaction(function () use ($product, $requestedQty, $transitLocationIds, &$deductedLocationIds) {
+
             $stocks = Stock::where('product_id', $product->id)
+                           ->whereNotIn('location_id', $transitLocationIds)
                            ->where('quantity', '>', 0)
                            ->orderBy('received_date', 'asc')
                            ->get();
 
-            $remainingToPick = $requestedQty; // จำนวนที่ยังต้องหยิบให้ครบ
+            $remainingToPick = $requestedQty;
 
             foreach ($stocks as $stock) {
-                // ถ้าหยิบครบแล้ว ให้หยุดการทำงานลูป
-                if ($remainingToPick <= 0) {
-                    break;
-                }
+                if ($remainingToPick <= 0) break;
 
-                if ($stock->quantity >= $remainingToPick) {
-                    // กรณีที่ 1: ล็อตนี้มีของ "พอ" หรือ "มากกว่า" ที่ต้องการ
-                    $stock->quantity -= $remainingToPick;
-                    $stock->save();
-                    $remainingToPick = 0; // หยิบครบแล้ว
-                } else {
-                    // กรณีที่ 2: ล็อตนี้มีของ "ไม่พอ" (ต้องกวาดให้เกลี้ยงแล้วไปเอาล็อตหน้าต่อ)
-                    $remainingToPick -= $stock->quantity;
-                    $stock->quantity = 0;
-                    $stock->save();
-                }
+                $toDeduct = min($stock->quantity, $remainingToPick);
+                $reservedToRelease = min($stock->reserved_qty, $toDeduct);
+
+                $stock->quantity     -= $toDeduct;
+                $stock->reserved_qty  = max(0, $stock->reserved_qty - $reservedToRelease);
+                $stock->save();
+
+                // ✅ Bug #10: track เฉพาะ location ที่ถูก deduct จริง
+                $deductedLocationIds[] = $stock->location_id;
+
+                $remainingToPick -= $toDeduct;
             }
 
-            // 3. บันทึกประวัติการเบิกออก (Type: OUT)
             Transaction::create([
-                'user_id' => auth()->id(),
+                'user_id'    => auth()->id(),
                 'product_id' => $product->id,
-                'quantity' => $requestedQty,
-                'type' => 'OUT',
+                'quantity'   => $requestedQty,
+                'type'       => 'OUT',
             ]);
         });
 
+        // ✅ Bug #10: checkAndUpdateStatus เฉพาะ location ที่ถูก deduct จริง
+        \App\Models\Location::whereIn('id', array_unique($deductedLocationIds))
+            ->get()
+            ->each(fn($loc) => $loc->checkAndUpdateStatus());
+
         return redirect()->back()->with('success', '✅ เบิกสินค้าเรียบร้อยแล้ว (ระบบทำการตัดสต็อกแบบ FIFO สำเร็จ!)');
+
+
+
     }
 }

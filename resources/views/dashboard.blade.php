@@ -9,7 +9,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
             {{-- Top Summary Cards --}}
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
                 <div class="bg-white rounded-xl shadow p-4 border-l-4 border-indigo-500">
                     <p class="text-xs text-gray-500 font-bold">📋 สินค้า</p>
                     <p class="text-2xl font-black text-indigo-600">{{ $totalProducts }}</p>
@@ -40,12 +40,22 @@
                     <p class="text-2xl font-black text-purple-600">{{ $totalLocations }}</p>
                     <p class="text-xs text-gray-400">ตำแหน่ง</p>
                 </div>
+                {{-- 🔖 การจองพื้นที่ --}}
+                <a href="{{ route('location-reservations.index') }}"
+                   class="bg-white rounded-xl shadow p-4 border-l-4 {{ $pendingLocationReservations > 0 ? 'border-fuchsia-500' : 'border-gray-300' }} hover:shadow-md transition block">
+                    <p class="text-xs text-gray-500 font-bold">🔖 จองพื้นที่</p>
+                    <p class="text-2xl font-black {{ $pendingLocationReservations > 0 ? 'text-fuchsia-600' : 'text-gray-400' }}">
+                        {{ $pendingLocationReservations }}
+                    </p>
+                    <p class="text-xs text-gray-400">รอสินค้าเข้า</p>
+                </a>
                 <div class="bg-white rounded-xl shadow p-4 border-l-4 {{ $lowStockCount > 0 ? 'border-red-500' : 'border-gray-300' }}">
                     <p class="text-xs text-gray-500 font-bold">⚠️ Low Stock</p>
                     <p class="text-2xl font-black {{ $lowStockCount > 0 ? 'text-red-600' : 'text-gray-400' }}">{{ $lowStockCount }}</p>
                     <p class="text-xs text-gray-400">รายการ</p>
                 </div>
             </div>
+
 
             {{-- Charts Row --}}
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

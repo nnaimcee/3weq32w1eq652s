@@ -50,13 +50,18 @@
                                         class="w-full border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500">
                                 </div>
                             </div>
-                            <div class="mb-4">
+                            <div class="mb-3">
                                 <label class="block text-sm font-bold text-gray-600 mb-1">ประเภท <span class="text-red-500">*</span></label>
                                 <select name="type" required
                                     class="w-full border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500">
                                     <option value="storage">📦 Storage (จัดเก็บ)</option>
                                     <option value="transit">🚚 Transit (พักสินค้า)</option>
                                 </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-bold text-gray-600 mb-1">ความจุ (Capacity) <span class="text-xs text-gray-400">ชิ้น</span></label>
+                                <input type="number" name="capacity" min="1" value="5000" placeholder="5000"
+                                    class="w-full border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500">
                             </div>
                             <button type="submit"
                                 class="w-full bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2.5 rounded-xl shadow-lg transition">
@@ -201,7 +206,7 @@
                                         <th class="px-4 py-3">Zone</th>
                                         <th class="px-4 py-3">ประเภท</th>
                                         <th class="px-4 py-3">สถานะ</th>
-                                        <th class="px-4 py-3 text-center">สินค้า</th>
+                                        <th class="px-4 py-3 text-center">สินค้า / Capacity</th>
                                         <th class="px-4 py-3 text-center">จัดการ</th>
                                     </tr>
                                 </thead>
@@ -233,6 +238,7 @@
                                             </td>
                                             <td class="px-4 py-3 text-center display-cell-{{ $location->id }}">
                                                 <span class="font-bold text-blue-600">{{ number_format($location->stocks_sum_quantity ?? 0) }}</span>
+                                                <span class="text-gray-400 text-xs">/{{ number_format($location->capacity ?? 5000) }}</span>
                                             </td>
                                             <td class="px-4 py-3 text-center display-cell-{{ $location->id }}">
                                                 <div class="flex items-center justify-center gap-1">
@@ -292,6 +298,12 @@
                                                             <option value="inactive" {{ $location->status === 'inactive' ? 'selected' : '' }}>Inactive</option>
                                                             <option value="full" {{ $location->status === 'full' ? 'selected' : '' }}>Full</option>
                                                         </select>
+                                                    </div>
+                                                    <div class="w-24">
+                                                        <label class="text-xs text-gray-500 font-bold">Capacity</label>
+                                                        <input type="number" name="capacity" min="1"
+                                                            value="{{ $location->capacity ?? 5000 }}"
+                                                            class="w-full border-gray-300 rounded text-sm">
                                                     </div>
                                                     <div class="flex gap-1">
                                                         <button type="submit"

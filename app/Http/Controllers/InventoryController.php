@@ -53,9 +53,15 @@ class InventoryController extends Controller
             $query->select('location_id', 'quantity', 'reserved_qty');
         }])
         ->get()
-        ->groupBy('zone'); // จัดกลุ่มตาม Zone เพื่อให้แสดงผลแยกส่วนกัน
+        ->groupBy('zone');
 
-        return view('inventory.map', compact('zones'));
+        // ดึงการจอง pending ทั้งหมด (keyed by location_id)
+        $pendingReservations = \App\Models\LocationReservation::with('product')
+            ->where('status', 'pending')
+            ->get()
+            ->keyBy('location_id');
+
+        return view('inventory.map', compact('zones', 'pendingReservations'));
     }
     public function destroy($id)
 {
