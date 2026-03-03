@@ -14,6 +14,11 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ScannerController;
 
+//--------
+use App\Models\User; 
+use Illuminate\Support\Facades\Hash;
+//--------
+
 // --- IGNORE --- (ส่วนนี้เป็นโค้ดที่ Laravel สร้างมาให้แล้ว ไม่ต้องแก้ไข)
 Route::redirect('/', '/login');
 Route::get('/dashboard', function () {
