@@ -1,5 +1,5 @@
 # ใช้ PHP 8.2 พร้อม Apache เป็นพื้นฐาน
-FROM php:8.2-apache
+FROM php:8.4-apache
 
 # ติดตั้งส่วนเสริมที่จำเป็นสำหรับ Laravel และ PostgreSQL
 RUN apt-get update && apt-get install -y \
