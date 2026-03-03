@@ -7,7 +7,7 @@
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="bg-white shadow-lg rounded-2xl p-6 border-t-4 border-indigo-500">
                 <form method="POST" action="{{ route('users.update', $user->id) }}">
                     @csrf

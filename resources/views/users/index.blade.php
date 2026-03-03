@@ -6,7 +6,7 @@
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             
             {{-- Flash Messages --}}
             @if (session('success'))
@@ -30,7 +30,44 @@
                 <div class="p-4 bg-gray-50 border-b flex items-center justify-between">
                     <h3 class="font-bold text-gray-700">📋 รายการผู้ใช้งานทั้งหมด ({{ $users->count() }} คน)</h3>
                 </div>
-                <div class="overflow-x-auto">
+
+                {{-- Mobile Card View --}}
+                <div class="sm:hidden divide-y divide-gray-100">
+                    @foreach($users as $user)
+                        <div class="p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <div>
+                                    <p class="font-bold text-gray-900">{{ $user->name }}</p>
+                                    <p class="text-sm text-gray-500">{{ $user->email }}</p>
+                                </div>
+                                @if($user->role === 'admin')
+                                    <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-bold">👑 Admin</span>
+                                @else
+                                    <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-bold">👤 Staff</span>
+                                @endif
+                            </div>
+                            <div class="flex gap-2 mt-2">
+                                <a href="{{ route('users.edit', $user->id) }}" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2 px-3 rounded-lg transition text-center">
+                                    ✏️ แก้ไข
+                                </a>
+                                @if(auth()->id() !== $user->id)
+                                <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="flex-1" onsubmit="return confirm('⚠️ ยืนยันการลบผู้ใช้งาน {{ $user->name }} หรือไม่?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="w-full bg-red-100 hover:bg-red-200 text-red-600 text-xs font-bold py-2 px-3 rounded-lg transition">
+                                        🗑️ ลบ
+                                    </button>
+                                </form>
+                                @else
+                                <div class="flex-1"></div>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- Desktop Table View --}}
+                <div class="hidden sm:block overflow-x-auto">
                     <table class="w-full text-sm text-left">
                         <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
                             <tr>

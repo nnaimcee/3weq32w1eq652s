@@ -61,7 +61,7 @@
 
         <a href="{{ route('transfer.pending') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('transfer.pending') ? 'bg-blue-600 text-white shadow-md' : 'text-slate-300 hover:bg-slate-700 hover:text-white' }}">
-            <span class="w-5 text-center">📥</span> รอรับของ (Transit)
+            <span class="w-5 text-center">📥</span> รอรับของ
         </a>
 
         {{-- รายงาน --}}

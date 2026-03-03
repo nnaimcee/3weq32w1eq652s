@@ -1,12 +1,12 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            📊 รายการสินค้าคงคลัง (Inventory List)
+            📊 รายการสินค้าคงคลัง
         </h2>
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
             {{-- Summary Cards --}}
             @php
@@ -85,9 +85,11 @@
             @endphp
             <div class="product-card bg-white rounded-2xl shadow-md mb-4 overflow-hidden border border-gray-200" data-search="{{ mb_strtolower($product->sku . ' ' . $product->name) }}">
                 {{-- Product Header Row --}}
-                <div class="p-4 flex flex-wrap items-center justify-between gap-4 cursor-pointer hover:bg-gray-50 transition"
+                <div class="p-4 cursor-pointer hover:bg-gray-50 transition"
                      onclick="toggleDetail('detail-{{ $product->id }}')">
-                    <div class="flex items-center gap-4 flex-1 min-w-0">
+
+                    {{-- Top row: QR + Name --}}
+                    <div class="flex items-center gap-3 mb-3">
                         <div class="flex-shrink-0">
                             @if($product->qr_code_image)
                                 <img id="qrcode-img-{{ $product->id }}"
@@ -97,61 +99,64 @@
                                 <div class="w-12 h-12 rounded border bg-gray-100 flex items-center justify-center text-gray-400 text-xs">No QR</div>
                             @endif
                         </div>
-                        <div class="min-w-0">
-                            <h3 class="font-bold text-gray-800 text-lg truncate">{{ $product->name }}</h3>
-                            <div class="flex items-center gap-3 text-xs text-gray-400">
+                        <div class="min-w-0 flex-1">
+                            <h3 class="font-bold text-gray-800 text-base sm:text-lg break-words leading-tight">{{ $product->name }}</h3>
+                            <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-400 mt-0.5">
                                 <span class="font-mono">{{ $product->sku }}</span>
                                 <span>|</span>
                                 <span class="font-mono">{{ $product->barcode }}</span>
                             </div>
                         </div>
-                    </div>
-
-                    {{-- Badges --}}
-                    <div class="flex items-center gap-3 flex-shrink-0">
-                        <div class="text-center px-3">
-                            <p class="text-xs text-gray-400">ในคลัง</p>
-                            <p class="text-lg font-black text-blue-600">{{ number_format($qty) }}</p>
-                        </div>
-                        <div class="text-center px-3">
-                            <p class="text-xs text-gray-400">จอง</p>
-                            <p class="text-lg font-black text-yellow-600">{{ number_format($reserved) }}</p>
-                        </div>
-                        @if($transit > 0)
-                        <div class="text-center px-3">
-                            <p class="text-xs text-gray-400">ระหว่างทาง</p>
-                            <p class="text-lg font-black text-orange-500">🚚 {{ number_format($transit) }}</p>
-                        </div>
-                        @endif
-                        <div class="text-center px-3 border-l border-gray-200 pl-3">
-                            <p class="text-xs text-gray-400">พร้อมจ่าย</p>
-                            <p class="text-lg font-black {{ $available > 0 ? 'text-green-600' : 'text-red-500' }}">{{ number_format($available) }}</p>
-                        </div>
-
-                        {{-- Action buttons --}}
-                        <div class="flex gap-2 ml-2">
-                            @if(auth()->user()->role === 'admin')
-                            <button onclick="event.stopPropagation(); openReservationModal('{{ $product->id }}', '{{ addslashes($product->name) }}', {{ $qty }}, {{ $reserved }})"
-                                class="bg-yellow-500 hover:bg-yellow-600 text-white py-1.5 px-3 rounded-lg text-xs font-bold shadow-sm transition">
-                                🔒 จอง
-                            </button>
-                            @endif
-                            <button onclick="event.stopPropagation(); printStickerDirect('{{ addslashes($product->name) }}', '{{ $product->sku }}', '{{ $product->id }}')"
-                                class="bg-gray-700 hover:bg-black text-white py-1.5 px-3 rounded-lg text-xs font-bold shadow-sm transition">
-                                🖨️
-                            </button>
-                            <button onclick="event.stopPropagation(); printQrStickerDirect('{{ addslashes($product->name) }}', '{{ $product->sku }}', '{{ $product->id }}')"
-                                class="bg-indigo-600 hover:bg-indigo-800 text-white py-1.5 px-3 rounded-lg text-xs font-bold shadow-sm transition">
-                                📱
-                            </button>
-                        </div>
-
-                        {{-- Expand arrow --}}
-                        <svg id="arrow-{{ $product->id }}" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        {{-- Expand arrow (top right) --}}
+                        <svg id="arrow-{{ $product->id }}" class="w-5 h-5 text-gray-400 transition-transform duration-200 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </div>
+
+                    {{-- Bottom row: Stats + Action buttons --}}
+                    <div class="flex items-center justify-between flex-wrap gap-y-2">
+                        {{-- Stats --}}
+                        <div class="flex items-center gap-3 sm:gap-4">
+                            <div class="text-center">
+                                <p class="text-[10px] sm:text-xs text-gray-400 leading-tight">ในคลัง</p>
+                                <p class="text-sm sm:text-lg font-black text-blue-600 leading-tight">{{ number_format($qty) }}</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-[10px] sm:text-xs text-gray-400 leading-tight">จอง</p>
+                                <p class="text-sm sm:text-lg font-black text-yellow-600 leading-tight">{{ number_format($reserved) }}</p>
+                            </div>
+                            @if($transit > 0)
+                            <div class="text-center">
+                                <p class="text-[10px] sm:text-xs text-gray-400 leading-tight">ระหว่างทาง</p>
+                                <p class="text-sm sm:text-lg font-black text-orange-500 leading-tight">🚚 {{ number_format($transit) }}</p>
+                            </div>
+                            @endif
+                            <div class="text-center border-l border-gray-200 pl-3">
+                                <p class="text-[10px] sm:text-xs text-gray-400 leading-tight">พร้อมจ่าย</p>
+                                <p class="text-sm sm:text-lg font-black {{ $available > 0 ? 'text-green-600' : 'text-red-500' }} leading-tight">{{ number_format($available) }}</p>
+                            </div>
+                        </div>
+
+                        {{-- Action buttons --}}
+                        <div class="flex gap-1.5" onclick="event.stopPropagation()">
+                            @if(auth()->user()->role === 'admin')
+                            <button onclick="openReservationModal('{{ $product->id }}', '{{ addslashes($product->name) }}', {{ $qty }}, {{ $reserved }})"
+                                class="bg-yellow-500 hover:bg-yellow-600 text-white py-1.5 px-2 sm:px-3 rounded-lg text-xs font-bold shadow-sm transition">
+                                🔒<span class="hidden sm:inline ml-1">จอง</span>
+                            </button>
+                            @endif
+                            <button onclick="printStickerDirect('{{ addslashes($product->name) }}', '{{ $product->sku }}', '{{ $product->id }}')"
+                                class="bg-gray-700 hover:bg-black text-white py-1.5 px-2 sm:px-3 rounded-lg text-xs font-bold shadow-sm transition">
+                                🖨️
+                            </button>
+                            <button onclick="printQrStickerDirect('{{ addslashes($product->name) }}', '{{ $product->sku }}', '{{ $product->id }}')"
+                                class="bg-indigo-600 hover:bg-indigo-800 text-white py-1.5 px-2 sm:px-3 rounded-lg text-xs font-bold shadow-sm transition">
+                                📱
+                            </button>
+                        </div>
+                    </div>
                 </div>
+
 
                 {{-- Expandable Detail Section --}}
                 <div id="detail-{{ $product->id }}" class="hidden border-t border-gray-200 bg-gray-50">

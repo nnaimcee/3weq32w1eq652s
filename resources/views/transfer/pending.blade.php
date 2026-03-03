@@ -1,10 +1,10 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">📥 สินค้าระหว่างทาง (Goods in Transit)</h2>
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">📥 Goods in Transit</h2>
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
             @if (session('success'))
                 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative mb-4">
@@ -18,7 +18,7 @@
             @endif
 
             {{-- Summary Cards --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <div class="bg-white rounded-2xl shadow p-5 border-l-4 border-yellow-500">
                     <div class="flex items-center justify-between">
                         <div>
@@ -39,7 +39,7 @@
                 </div>
             </div>
 
-            {{-- Transit Items Table --}}
+            {{-- Transit Items --}}
             <div class="bg-white shadow-lg rounded-2xl overflow-hidden">
                 <div class="p-4 bg-gray-50 border-b">
                     <div class="flex items-center justify-between">
@@ -57,7 +57,79 @@
                         <p class="text-gray-300 text-sm">สินค้าทั้งหมดถูกรับเข้าเรียบร้อยแล้ว</p>
                     </div>
                 @else
-                    <div class="overflow-x-auto">
+                    {{-- Mobile Card View --}}
+                    <div class="md:hidden divide-y divide-gray-100">
+                        @foreach($stocksInTransit as $st)
+                            @php
+                                $tx = $pendingTransactions->firstWhere('product_id', $st->product_id);
+                            @endphp
+                            <div class="p-4 bg-yellow-50">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div>
+                                        <p class="font-bold text-gray-800">{{ $st->product->name }}</p>
+                                        <p class="text-xs text-gray-400 font-mono">{{ $st->product->sku ?? '' }}</p>
+                                    </div>
+                                    <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-bold text-sm">{{ $st->quantity }} ชิ้น</span>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+                                    <div class="bg-white rounded-lg p-2">
+                                        <p class="text-gray-400 font-bold uppercase mb-0.5">ต้นทาง</p>
+                                        @if($tx && $tx->fromLocation)
+                                            <p class="text-gray-700">📍 {{ $tx->fromLocation->name }}</p>
+                                        @else
+                                            <p class="text-gray-400">-</p>
+                                        @endif
+                                    </div>
+                                    <div class="bg-white rounded-lg p-2">
+                                        <p class="text-gray-400 font-bold uppercase mb-0.5">ปลายทาง</p>
+                                        @if($tx && $tx->toLocation)
+                                            <p class="font-bold text-blue-600">🎯 {{ $tx->toLocation->name }}</p>
+                                        @else
+                                            <p class="text-gray-400">ยังไม่ระบุ</p>
+                                        @endif
+                                    </div>
+                                    <div class="bg-white rounded-lg p-2">
+                                        <p class="text-gray-400 font-bold uppercase mb-0.5">ผู้ส่ง</p>
+                                        @if($tx && $tx->user)
+                                            <p class="text-gray-700">{{ $tx->user->name }}</p>
+                                        @else
+                                            <p class="text-gray-400">-</p>
+                                        @endif
+                                    </div>
+                                    <div class="bg-white rounded-lg p-2">
+                                        <p class="text-gray-400 font-bold uppercase mb-0.5">เวลาส่ง</p>
+                                        @if($tx)
+                                            <p class="text-gray-600">{{ $tx->created_at->format('d/m/Y H:i') }}</p>
+                                        @else
+                                            <p class="text-gray-400">-</p>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <form action="{{ route('transfer.receive') }}" method="POST" class="flex flex-col gap-2">
+                                    @csrf
+                                    <input type="hidden" name="stock_id" value="{{ $st->id }}">
+                                    <select name="to_location_id" class="text-sm border-gray-300 rounded-lg w-full focus:border-green-500" required>
+                                        @foreach($destinations as $dest)
+                                            <option value="{{ $dest->id }}"
+                                                {{ ($tx && $tx->to_location_id == $dest->id) ? 'selected' : '' }}>
+                                                {{ $dest->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <button type="submit"
+                                        onclick="return confirm('⚠️ ยืนยันรับสินค้าเข้าตำแหน่งที่เลือก?')"
+                                        class="w-full bg-green-500 hover:bg-green-700 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition">
+                                        ✅ ยืนยันรับเข้า
+                                    </button>
+                                </form>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    {{-- Desktop Table View --}}
+                    <div class="hidden md:block overflow-x-auto">
                         <table class="w-full text-sm text-left">
                             <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
                                 <tr>
@@ -67,14 +139,13 @@
                                     <th class="px-4 py-3">ปลายทาง</th>
                                     <th class="px-4 py-3">ผู้ส่ง</th>
                                     <th class="px-4 py-3">เวลาส่ง</th>
-                                    <th class="px-4 py-3 text-center">รับเข้าตำแหน่ง</th>
+                                    <th class="px-4 py-3">รับเข้าตำแหน่ง</th>
                                     <th class="px-4 py-3 text-center">ดำเนินการ</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
                                 @foreach($stocksInTransit as $st)
                                     @php
-                                        // หา Transaction ที่ตรงกับ stock นี้
                                         $tx = $pendingTransactions->firstWhere('product_id', $st->product_id);
                                     @endphp
                                     <tr class="hover:bg-yellow-50">

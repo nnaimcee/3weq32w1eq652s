@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-red-600 leading-tight">
-            {{ __('📤 เบิกสินค้าออก (Outbound - FirstInFirstOut)') }}
+            {{ __('📤 เบิกสินค้าออก (Outbound)') }}
         </h2>
     </x-slot>
 

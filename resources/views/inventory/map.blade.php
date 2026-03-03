@@ -1,12 +1,12 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-2xl text-gray-800 leading-tight flex items-center gap-2">
-            🗺️ แผนผังคลังสินค้า (Warehouse Map)
+            🗺️ แผนผังคลังสินค้า
         </h2>
     </x-slot>
 
     <div class="min-h-screen bg-gray-100 py-8">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
             {{-- Summary Bar --}}
             @php
