@@ -19,6 +19,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // ถ้าอยู่บน Production (Render) ให้บังคับใช้ HTTPS
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }
