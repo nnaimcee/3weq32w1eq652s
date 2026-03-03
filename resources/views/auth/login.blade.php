@@ -3,8 +3,8 @@
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
     <div class="mb-10 text-center lg:text-left">
-        <h2 class="text-3xl font-extrabold text-slate-900 mb-2">ยินดีต้อนรับกลับมา 👋</h2>
-        <p class="text-slate-500">กรุณาเข้าสู่ระบบเพื่อจัดการคลังสินค้าของคุณ</p>
+        <h2 class="text-3xl font-extrabold text-slate-900 mb-2">ยินดีต้อนรับกลับมา 🤓</h2>
+        <p class="text-slate-500">กรุณาเข้าสู่ระบบเพื่อจัดการคลังสินค้า</p>
     </div>
 
     <form method="POST" action="{{ route('login') }}" class="space-y-6">
@@ -54,19 +54,19 @@
             <input id="remember_me" type="checkbox" name="remember" 
                 class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-pointer transition">
             <label for="remember_me" class="ml-2 block text-sm font-medium text-slate-600 cursor-pointer">
-                จดจำฉันไว้ในระบบ (Remember me)
+                จดจำฉันไว้ในระบบ
             </label>
         </div>
 
         <div class="pt-2">
             <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-extrabold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out transform hover:-translate-y-0.5">
-                เข้าสู่ระบบ (Log in)
+                เข้าสู่ระบบ
             </button>
         </div>
         
         <div class="mt-8 pt-6 border-t border-slate-100 text-center">
             <p class="text-sm font-medium text-slate-500">
-                ไม่ได้เป็นสมาชิก? ติดต่อผู้ดูแลระบบเพื่อขอสิทธิ์
+                ไม่ได้เป็นสมาชิก? ติดต่อแตงไทยซัง เพื่อขอสิทธิ์
             </p>
         </div>
     </form>

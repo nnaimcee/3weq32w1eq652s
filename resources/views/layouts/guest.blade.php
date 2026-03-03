@@ -13,19 +13,85 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <style>
+            /* Mobile/Tablet: dark gradient background */
+            @media (max-width: 1023px) {
+                body {
+                    background: linear-gradient(135deg, #1e3a5f 0%, #2d4a8a 50%, #3b6cb7 100%) !important;
+                }
+                /* Make form panel transparent */
+                .mobile-form-panel {
+                    background: transparent !important;
+                    box-shadow: none !important;
+                }
+                /* All text inside form panel → white */
+                .mobile-form-panel h1,
+                .mobile-form-panel h2,
+                .mobile-form-panel h3,
+                .mobile-form-panel h4,
+                .mobile-form-panel h5,
+                .mobile-form-panel h6,
+                .mobile-form-panel p,
+                .mobile-form-panel label,
+                .mobile-form-panel span,
+                .mobile-form-panel a,
+                .mobile-form-panel div {
+                    color: rgba(255, 255, 255, 0.90) !important;
+                }
+                /* Links stay blue-ish */
+                .mobile-form-panel a {
+                    color: #93c5fd !important;
+                }
+                /* Inputs: frosted glass look */
+                .mobile-form-panel input[type="email"],
+                .mobile-form-panel input[type="password"],
+                .mobile-form-panel input[type="text"] {
+                    background: rgba(255, 255, 255, 0.10) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+                    color: #ffffff !important;
+                }
+                .mobile-form-panel input::placeholder {
+                    color: rgba(255, 255, 255, 0.40) !important;
+                }
+                /* Checkbox label */
+                .mobile-form-panel input[type="checkbox"] {
+                    accent-color: #3b82f6;
+                }
+                /* SVG icons */
+                .mobile-form-panel svg {
+                    color: rgba(255,255,255,0.50) !important;
+                    stroke: rgba(255,255,255,0.50) !important;
+                }
+                /* Divider line */
+                .mobile-form-panel .border-t {
+                    border-color: rgba(255,255,255,0.15) !important;
+                }
+                /* Mobile logo icon bg */
+                .mobile-form-panel .bg-blue-600 {
+                    background: rgba(59, 130, 246, 0.80) !important;
+                }
+                /* Glow blobs */
+                .mobile-glow-1 { display: block !important; }
+                .mobile-glow-2 { display: block !important; }
+            }
+            .mobile-glow-1, .mobile-glow-2 { display: none; }
+        </style>
     </head>
-    <body class="font-sans text-gray-900 antialiased bg-slate-50">
-        <div class="min-h-screen flex">
+    <body class="font-sans text-gray-900 antialiased">
+        <div class="min-h-screen flex relative overflow-hidden">
+            <!-- Mobile glow blobs (visible only on small screens) -->
+            <div class="mobile-glow-1 pointer-events-none fixed" style="top:-8rem; left:-8rem; width:22rem; height:22rem; border-radius:9999px; background:#2563eb; filter:blur(100px); opacity:0.25; z-index:0;"></div>
+            <div class="mobile-glow-2 pointer-events-none fixed" style="bottom:-6rem; right:-6rem; width:18rem; height:18rem; border-radius:9999px; background:#6366f1; filter:blur(90px); opacity:0.25; z-index:0;"></div>
             <!-- Left Panel (Branding / Image) -->
-            <div class="hidden lg:flex lg:w-1/2 bg-slate-900 relative overflow-hidden items-center justify-center">
-                <!-- Decorative elements -->
-                <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 opacity-90"></div>
-                
-                <!-- Abstract circles -->
+            <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden items-center justify-center" style="background-color: #0f172a;">
+                <!-- Gradient background -->
+                <div class="absolute inset-0" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #1e3a8a 100%); opacity: 0.95;"></div>
+
+                <!-- Abstract glow circles -->
                 <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                    <div class="absolute -top-40 -left-64 w-96 h-96 rounded-full bg-blue-600 blur-[100px] opacity-30"></div>
-                    <div class="absolute top-1/2 left-1/2 w-[500px] h-[500px] rounded-full bg-indigo-500 blur-[120px] opacity-20 transform -translate-x-1/2 -translate-y-1/2"></div>
-                    <div class="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-cyan-500 blur-[100px] opacity-20"></div>
+                    <div class="absolute rounded-full" style="top:-10rem; left:-16rem; width:24rem; height:24rem; background:#2563eb; filter:blur(100px); opacity:0.30;"></div>
+                    <div class="absolute rounded-full" style="top:50%; left:50%; width:500px; height:500px; background:#6366f1; filter:blur(120px); opacity:0.20; transform:translate(-50%,-50%);"></div>
+                    <div class="absolute rounded-full" style="bottom:0; right:0; width:20rem; height:20rem; background:#06b6d4; filter:blur(100px); opacity:0.20;"></div>
                 </div>
 
                 <div class="relative z-10 p-12 text-center text-white flex flex-col items-center">
@@ -36,7 +102,7 @@
                     </div>
                     <h1 class="text-5xl font-extrabold tracking-tight mb-6 drop-shadow-lg">WMS System</h1>
                     <p class="text-lg text-slate-300 max-w-md mx-auto leading-relaxed">
-                        ระบบจัดการคลังสินค้าอัจฉริยะ ควบคุมสต็อก แม่นยำ รวดเร็ว และมีประสิทธิภาพ
+                        ระบบจัดการคลังสินค้า 
                     </p>
 
                     <div class="mt-16 flex items-center justify-center gap-2 text-sm text-slate-400">
@@ -46,7 +112,7 @@
             </div>
 
             <!-- Right Panel (Form) -->
-            <div class="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 sm:p-12 lg:p-24 bg-white shadow-2xl z-10 relative">
+            <div class="mobile-form-panel w-full lg:w-1/2 flex flex-col justify-center items-center p-8 sm:p-12 lg:p-24 bg-white shadow-2xl z-10 relative">
                 <!-- Mobile Logo (visible only on small screens) -->
                 <div class="lg:hidden w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center mb-6 shadow-lg">
                     <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -52,23 +52,23 @@
             <div class="bg-white p-4 rounded-xl shadow mb-6 flex flex-wrap justify-center gap-6 border border-gray-200">
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded-full bg-green-500"></span>
-                    <span class="text-sm font-medium text-gray-600">ว่าง (Empty)</span>
+                    <span class="text-sm font-medium text-gray-600">ว่าง</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded-full bg-blue-600"></span>
-                    <span class="text-sm font-medium text-gray-600">มีสินค้า (Occupied)</span>
+                    <span class="text-sm font-medium text-gray-600">มีสินค้า</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded-full bg-orange-500"></span>
-                    <span class="text-sm font-medium text-gray-600">เต็ม (Full)</span>
+                    <span class="text-sm font-medium text-gray-600">เต็ม</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded-full bg-yellow-500"></span>
-                    <span class="text-sm font-medium text-gray-600">จองพื้นที่ (Reserved)</span>
+                    <span class="text-sm font-medium text-gray-600">จองพื้นที่</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded-full bg-red-500"></span>
-                    <span class="text-sm font-medium text-gray-600">ปิดใช้งาน (Inactive)</span>
+                    <span class="text-sm font-medium text-gray-600">ปิดใช้งาน</span>
                 </div>
             </div>
 
@@ -80,16 +80,16 @@
                 $zoneOccupied = $locations->filter(fn($l) => $l->stocks->sum('quantity') > 0)->count();
             @endphp
             <div class="mb-10">
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
                     <div class="flex items-center gap-3">
-                        <div class="bg-indigo-600 w-2 h-8 rounded-full"></div>
-                        <h3 class="text-2xl font-bold text-gray-800">Zone: {{ $zoneName }}</h3>
+                        <div class="bg-indigo-600 w-2 h-8 rounded-full flex-shrink-0"></div>
+                        <h3 class="text-xl sm:text-2xl font-bold text-gray-800">Zone: {{ $zoneName }}</h3>
                         <span class="text-sm text-gray-400">({{ $locations->count() }} ตำแหน่ง)</span>
                     </div>
-                    <div class="flex gap-4 text-sm text-gray-500">
-                        <span>📦 {{ number_format($zoneQty) }} ชิ้น</span>
-                        <span>🏷️ จอง {{ number_format($zoneReserved) }}</span>
-                        <span>📍 ใช้งาน {{ $zoneOccupied }}/{{ $locations->count() }}</span>
+                    <div class="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500 pl-5 sm:pl-0">
+                        <span class="bg-blue-50 px-2 py-1 rounded-lg">📦 {{ number_format($zoneQty) }} ชิ้น</span>
+                        <span class="bg-yellow-50 px-2 py-1 rounded-lg">🏷️ จอง {{ number_format($zoneReserved) }}</span>
+                        <span class="bg-green-50 px-2 py-1 rounded-lg">📍 ใช้งาน {{ $zoneOccupied }}/{{ $locations->count() }}</span>
                     </div>
                 </div>
 
@@ -197,31 +197,31 @@
     </div>
 
     {{-- Modal --}}
-    <div id="locationModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 z-50 flex justify-center items-center backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 max-h-[85vh] flex flex-col">
+    <div id="locationModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 z-50 flex justify-center items-end sm:items-center backdrop-blur-sm p-0 sm:p-4">
+        <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:w-11/12 md:w-3/4 lg:w-1/2 max-h-[90vh] sm:max-h-[85vh] flex flex-col">
 
-            <div class="p-5 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
-                <div class="flex items-center gap-3">
-                    <span class="text-3xl">📍</span>
-                    <h3 class="text-xl font-bold text-gray-800">สินค้าในพื้นที่: <span id="modalTitleName" class="text-blue-600">...</span></h3>
+            <div class="p-4 sm:p-5 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <span class="text-2xl sm:text-3xl flex-shrink-0">📍</span>
+                    <h3 class="text-base sm:text-xl font-bold text-gray-800 truncate">พื้นที่: <span id="modalTitleName" class="text-blue-600">...</span></h3>
                 </div>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-red-500 font-bold text-3xl leading-none transition">&times;</button>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-red-500 font-bold text-3xl leading-none transition flex-shrink-0 ml-2">&times;</button>
             </div>
 
-            <div class="p-6 overflow-y-auto bg-white flex-1">
+            <div class="p-4 sm:p-6 overflow-y-auto bg-white flex-1">
                 {{-- Summary inside modal --}}
-                <div id="modalSummary" class="hidden grid grid-cols-3 gap-3 mb-4">
-                    <div class="bg-blue-50 rounded-lg p-3 text-center">
+                <div id="modalSummary" class="hidden grid grid-cols-3 gap-2 sm:gap-3 mb-4">
+                    <div class="bg-blue-50 rounded-lg p-2 sm:p-3 text-center">
                         <p class="text-xs text-gray-500">สินค้าทั้งหมด</p>
-                        <p id="modalTotalQty" class="text-xl font-black text-blue-600">0</p>
+                        <p id="modalTotalQty" class="text-lg sm:text-xl font-black text-blue-600">0</p>
                     </div>
-                    <div class="bg-yellow-50 rounded-lg p-3 text-center">
+                    <div class="bg-yellow-50 rounded-lg p-2 sm:p-3 text-center">
                         <p class="text-xs text-gray-500">ถูกจอง</p>
-                        <p id="modalTotalReserved" class="text-xl font-black text-yellow-600">0</p>
+                        <p id="modalTotalReserved" class="text-lg sm:text-xl font-black text-yellow-600">0</p>
                     </div>
-                    <div class="bg-green-50 rounded-lg p-3 text-center">
+                    <div class="bg-green-50 rounded-lg p-2 sm:p-3 text-center">
                         <p class="text-xs text-gray-500">พร้อมเบิก</p>
-                        <p id="modalTotalAvailable" class="text-xl font-black text-green-600">0</p>
+                        <p id="modalTotalAvailable" class="text-lg sm:text-xl font-black text-green-600">0</p>
                     </div>
                 </div>
 
@@ -240,25 +240,27 @@
                 </div>
 
                 <div id="itemsTableContainer" class="hidden rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
-                            <tr>
-                                <th class="p-3">SKU</th>
-                                <th class="p-3">ชื่อสินค้า</th>
-                                <th class="p-3 text-center">Lot / วันรับ</th>
-                                <th class="p-3 text-center">จำนวน</th>
-                                <th class="p-3 text-center">จอง</th>
-                                <th class="p-3 text-center">พร้อมเบิก</th>
-                            </tr>
-                        </thead>
-                        <tbody id="itemsTableBody" class="divide-y divide-gray-100">
-                        </tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm min-w-[480px]">
+                            <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
+                                <tr>
+                                    <th class="p-2 sm:p-3">SKU</th>
+                                    <th class="p-2 sm:p-3">ชื่อสินค้า</th>
+                                    <th class="p-2 sm:p-3 text-center whitespace-nowrap">Lot / วันรับ</th>
+                                    <th class="p-2 sm:p-3 text-center">จำนวน</th>
+                                    <th class="p-2 sm:p-3 text-center">จอง</th>
+                                    <th class="p-2 sm:p-3 text-center whitespace-nowrap">พร้อมเบิก</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsTableBody" class="divide-y divide-gray-100">
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            <div class="p-4 border-t text-right bg-gray-50 rounded-b-2xl">
-                <button onclick="closeModal()" class="bg-gray-800 hover:bg-black text-white px-8 py-2.5 rounded-xl font-medium transition shadow-md">ปิดหน้าต่าง</button>
+            <div class="p-3 sm:p-4 border-t text-right bg-gray-50 rounded-b-2xl">
+                <button onclick="closeModal()" class="bg-gray-800 hover:bg-black text-white px-6 sm:px-8 py-2.5 rounded-xl font-medium transition shadow-md w-full sm:w-auto">ปิดหน้าต่าง</button>
             </div>
         </div>
     </div>
