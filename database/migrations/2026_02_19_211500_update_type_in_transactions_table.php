@@ -12,8 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Use raw SQL to modify ENUM
-        DB::statement("ALTER TABLE transactions MODIFY COLUMN type ENUM('IN', 'OUT', 'TRANSFER', 'RESERVE', 'RELEASE') NOT NULL");
+        // ใน PostgreSQL เราจะใช้ ALTER COLUMN ... TYPE
+        // และแนะนำให้เปลี่ยนเป็น VARCHAR เพื่อความยืดหยุ่นในการรัน Migration
+        DB::statement("ALTER TABLE transactions ALTER COLUMN type TYPE VARCHAR(255)");
     }
 
     /**
@@ -21,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Revert back to original ENUM
-        DB::statement("ALTER TABLE transactions MODIFY COLUMN type ENUM('IN', 'OUT', 'TRANSFER', 'RESERVE') NOT NULL");
+        // ตอนถอยกลับก็ให้คงความเป็น VARCHAR ไว้
+        DB::statement("ALTER TABLE transactions ALTER COLUMN type TYPE VARCHAR(255)");
     }
 };

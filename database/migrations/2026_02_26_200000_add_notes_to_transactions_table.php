@@ -10,11 +10,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('transactions', function (Blueprint $table) {
-            $table->text('notes')->nullable()->after('ref_doc_no');
+            // 1. PostgreSQL ไม่รองรับคำสั่ง ->after() ครับ
+            // ระบบจะเพิ่ม column 'notes' ต่อท้ายตารางให้โดยอัตโนมัติ
+            $table->text('notes')->nullable();
         });
 
-        // อัปเดต type enum ให้รองรับ RELEASE ด้วย
-        DB::statement("ALTER TABLE transactions MODIFY COLUMN type ENUM('IN', 'OUT', 'TRANSFER', 'RESERVE', 'RELEASE') NOT NULL");
+        // 2. เปลี่ยนจาก MODIFY COLUMN เป็น ALTER COLUMN ... TYPE (สำหรับ PostgreSQL)
+        // และแนะนำให้ใช้ VARCHAR(255) เพื่อป้องกันปัญหา Data Type ขัดแย้งกันครับ
+        DB::statement("ALTER TABLE transactions ALTER COLUMN type TYPE VARCHAR(255)");
     }
 
     public function down(): void
@@ -23,6 +26,7 @@ return new class extends Migration
             $table->dropColumn('notes');
         });
 
-        DB::statement("ALTER TABLE transactions MODIFY COLUMN type ENUM('IN', 'OUT', 'TRANSFER', 'RESERVE') NOT NULL");
+        // ปรับให้เป็น VARCHAR(255) เช่นกันครับ
+        DB::statement("ALTER TABLE transactions ALTER COLUMN type TYPE VARCHAR(255)");
     }
 };

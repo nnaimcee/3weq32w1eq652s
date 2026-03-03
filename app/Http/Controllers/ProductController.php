@@ -27,9 +27,9 @@ class ProductController extends Controller
     public function create()
     {
         // 1. ดึงสินค้าที่มี SKU รูปแบบ 'SKU-xxxxxx' ที่มีเลขมากที่สุด
-        // ปรับ CAST กลับเป็น UNSIGNED เพื่อให้รองรับ MySQL (Local)
+        // ปรับ CAST เป็น INTEGER เพื่อให้รองรับ PostgreSQL (Supabase)
         $lastSkuRecord = Product::where('sku', 'LIKE', 'SKU-%')
-            ->selectRaw('MAX(CAST(SUBSTRING(sku, 5) AS UNSIGNED)) as max_sku')
+            ->selectRaw('MAX(CAST(SUBSTRING(sku, 5) AS INTEGER)) as max_sku')
             ->first();
 
         // 2. ถ้ามีข้อมูลให้เอาค่า Max + 1 ถ้าไม่มีให้เริ่มที่ 1
