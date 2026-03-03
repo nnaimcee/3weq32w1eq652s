@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
-use Illuminate\Support\Facades\Storage;
+use App\Models\Location;
 use Milon\Barcode\Facades\DNS1DFacade as DNS1D;
 use Milon\Barcode\Facades\DNS2DFacade as DNS2D;
 
@@ -13,9 +13,7 @@ class ProductController extends Controller
     // ฟังก์ชันสำหรับหน้าพิมพ์บาร์โค้ด
     public function printBarcode($id)
     {
-        // ค้นหาสินค้าจาก ID ถ้าไม่เจอให้แสดงหน้า 404
         $product = Product::findOrFail($id);
-        
         return view('products.barcode', compact('product'));
     }
 
@@ -29,8 +27,8 @@ class ProductController extends Controller
     public function create()
     {
         // 1. ดึงสินค้าที่มี SKU รูปแบบ 'SKU-xxxxxx' ที่มีเลขมากที่สุด
-        // โดยการสั่งตัดคำว่า 'SKU-' ออกแล้วแปลงเป็นตัวเลขเพื่อหาค่า Max
-        $lastSkuRecord = \App\Models\Product::where('sku', 'LIKE', 'SKU-%')
+        // ปรับ CAST กลับเป็น UNSIGNED เพื่อให้รองรับ MySQL (Local)
+        $lastSkuRecord = Product::where('sku', 'LIKE', 'SKU-%')
             ->selectRaw('MAX(CAST(SUBSTRING(sku, 5) AS UNSIGNED)) as max_sku')
             ->first();
 
@@ -43,7 +41,8 @@ class ProductController extends Controller
         return view('products.create', compact('nextSku'));
     }
 
-    public function store(Request $request) {
+    public function store(Request $request) 
+    {
         $request->validate([
             'name' => 'required|string|max:255',
             'sku' => 'required|string|unique:products,sku',
@@ -53,39 +52,45 @@ class ProductController extends Controller
         // ถ้าไม่ได้กรอกบาร์โค้ดมา ให้ใช้ SKU เป็นบาร์โค้ดแทน
         $barcode = $request->barcode ?: $request->sku;
 
-        // 1. ตั้งชื่อไฟล์รูปภาพให้ไม่ซ้ำกัน (เช่น barcode_SKU-000001.png)
-        $imageName = 'barcode_' . $request->sku . '.png';
-
-        // 2. สั่งสร้างบาร์โค้ดเป็นไฟล์ภาพ PNG
+        // ==========================================
+        // 🌟 ส่วนที่แก้ไข: อัปโหลดรูปขึ้น Cloudinary
+        // ==========================================
+        
+        // 1. สร้างและอัปโหลดบาร์โค้ด (Barcode)
         $barcodeBase64 = DNS1D::getBarcodePNG($barcode, 'C128', 1.5, 33);
+        $barcodeUpload = cloudinary()->uploadApi()->upload("data:image/png;base64," . $barcodeBase64, [
+            'folder' => 'barcodes',
+            'public_id' => 'barcode_' . $request->sku
+        ]);
+        $barcodeUrl = $barcodeUpload['secure_url'];
 
-        // 3. เซฟไฟล์ภาพลงในโฟลเดอร์ storage/app/public/barcodes/
-        Storage::disk('public')->put('barcodes/' . $imageName, base64_decode($barcodeBase64));
-
-        // 4. สร้าง QR Code เป็นไฟล์ภาพ PNG
-        $qrImageName = 'qrcode_' . $request->sku . '.png';
+        // 2. สร้างและอัปโหลดคิวอาร์โค้ด (QR Code)
         $qrBase64 = DNS2D::getBarcodePNG($barcode, 'QRCODE', 6, 6);
-        Storage::disk('public')->put('qrcodes/' . $qrImageName, base64_decode($qrBase64));
+        $qrUpload = cloudinary()->uploadApi()->upload("data:image/png;base64," . $qrBase64, [
+            'folder' => 'qrcodes',
+            'public_id' => 'qrcode_' . $request->sku
+        ]);
+        $qrCodeUrl = $qrUpload['secure_url'];
 
-        // 5. บันทึกข้อมูลทั้งหมด (รวมถึงชื่อไฟล์รูป) ลงฐานข้อมูล
+        // 3. บันทึกข้อมูลลงฐานข้อมูล (เก็บเป็น URL เต็มจาก Cloudinary)
         Product::create([
             'name' => $request->name,
             'sku' => $request->sku,
             'barcode' => $barcode,
             'min_stock' => $request->min_stock ?? 0,
-            'barcode_image' => $imageName,
-            'qr_code_image' => $qrImageName,
+            'barcode_image' => $barcodeUrl,
+            'qr_code_image' => $qrCodeUrl,
         ]);
 
-        return redirect()->route('inventory.index')->with('success', 'เพิ่มสินค้าและสร้างรูปบาร์โค้ด + QR Code อัตโนมัติเรียบร้อย!');
+        return redirect()->route('inventory.index')->with('success', 'เพิ่มสินค้าและสร้างรูปบาร์โค้ด + QR Code บน Cloudinary เรียบร้อย!');
     }
 
     public function getByBarcode($barcode)
     {
-        $transitLocationIds = \App\Models\Location::where('type', 'transit')->pluck('id');
+        $transitLocationIds = Location::where('type', 'transit')->pluck('id');
 
         // ค้นหาสินค้าจากเลขบาร์โค้ด — exclude สต็อกที่อยู่ใน Transit
-        $product = \App\Models\Product::where('barcode', $barcode)
+        $product = Product::where('barcode', $barcode)
             ->withSum(['stocks as stocks_sum_quantity' => function($q) use ($transitLocationIds) {
                 $q->whereNotIn('location_id', $transitLocationIds);
             }], 'quantity')

@@ -91,7 +91,7 @@
                         <div class="flex-shrink-0">
                             @if($product->qr_code_image)
                                 <img id="qrcode-img-{{ $product->id }}"
-                                     src="{{ asset('storage/qrcodes/' . $product->qr_code_image) }}"
+                                     src="{{ $product->qr_code_image }}"
                                      class="w-12 h-12 rounded border" alt="QR">
                             @else
                                 <div class="w-12 h-12 rounded border bg-gray-100 flex items-center justify-center text-gray-400 text-xs">No QR</div>
@@ -257,7 +257,7 @@
 
                 {{-- hidden barcode img for print --}}
                 @if($product->barcode_image)
-                <img id="barcode-img-{{ $product->id }}" src="{{ asset('storage/barcodes/' . $product->barcode_image) }}" style="display:none" alt="barcode">
+                <img id="barcode-img-{{ $product->id }}" src="{{ $product->barcode_image }}" style="display:none" alt="barcode">
                 @endif
             </div>
             @endforeach

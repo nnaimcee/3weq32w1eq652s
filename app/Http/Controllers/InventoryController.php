@@ -8,14 +8,16 @@ use Illuminate\Support\Facades\Storage;
 
 class InventoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // ดึง transit + inactive location IDs เพื่อ exclude จากยอดพร้อมจ่าย
         $transitLocationIds = \App\Models\Location::where('type', 'transit')->pluck('id');
         $inactiveLocationIds = \App\Models\Location::where('status', 'inactive')->pluck('id');
         $excludeLocationIds = $transitLocationIds->merge($inactiveLocationIds)->unique();
 
-        $products = Product::withSum(['stocks as stocks_sum_quantity' => function($q) use ($excludeLocationIds) {
+        $search = $request->input('search');
+
+        $query = Product::withSum(['stocks as stocks_sum_quantity' => function($q) use ($excludeLocationIds) {
                 $q->whereNotIn('location_id', $excludeLocationIds);
             }], 'quantity')
             ->withSum(['stocks as stocks_sum_reserved_qty' => function($q) use ($excludeLocationIds) {
@@ -28,10 +30,19 @@ class InventoryController extends Controller
                 $q->where('quantity', '>', 0)
                   ->whereNotIn('location_id', $inactiveLocationIds)
                   ->with('location')->orderBy('received_date', 'asc');
-            }])
-            ->get();
+            }]);
 
-        return view('inventory.index', compact('products', 'transitLocationIds'));
+        // ค้นหาตาม SKU หรือ ชื่อสินค้า
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('sku', 'like', '%' . $search . '%')
+                  ->orWhere('name', 'like', '%' . $search . '%');
+            });
+        }
+
+        $products = $query->get();
+
+        return view('inventory.index', compact('products', 'transitLocationIds', 'search'));
     }
 
     public function warehouseMap()
