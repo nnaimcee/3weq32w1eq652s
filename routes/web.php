@@ -14,11 +14,6 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ScannerController;
 
-//--------
-use App\Models\User; 
-use Illuminate\Support\Facades\Hash;
-//--------
-
 // --- IGNORE --- (ส่วนนี้เป็นโค้ดที่ Laravel สร้างมาให้แล้ว ไม่ต้องแก้ไข)
 Route::redirect('/', '/login');
 Route::get('/dashboard', function () {
@@ -195,24 +190,16 @@ Route::middleware('auth')->group(function () {
 });
 
 
+
 Route::get('/setup-admin', function () {
-    $user = User::create([
-        'name' => 'Admin WMS',
-        'email' => 'admin@wms.com',
-        'password' => Hash::make('password'),
-    ]);
+    Location::firstOrCreate(
+        ['type' => 'transit'],
+        [
+            'name' => 'คลังสินค้าระหว่างทาง (Transit)',
+            'description' => 'สถานที่พักสินค้าชั่วคราวขณะทำการโอนย้าย'
+        ]
+    );
 
-    return "Create Admin User Success";
+    return "Transit Location created successfully";
 });
-
-Route::get('/setup-staff', function () {
-    $user = User::create([
-        'name' => 'Staff WMS',
-        'email' => 'staff@wms.com',
-        'password' => Hash::make('password'),
-    ]);
-
-    return "Create Staff User Success";
-});
-
 require __DIR__.'/auth.php';
