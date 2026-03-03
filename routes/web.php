@@ -3,6 +3,7 @@
 use App\Models\Product;
 use App\Models\Stock;
 use App\Models\Transaction;
+use App\Models\Location;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InventoryController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\TransferController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ScannerController;
+
 
 // --- IGNORE --- (ส่วนนี้เป็นโค้ดที่ Laravel สร้างมาให้แล้ว ไม่ต้องแก้ไข)
 Route::redirect('/', '/login');
