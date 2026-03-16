@@ -12,8 +12,13 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Inter', ...defaultTheme.fontFamily.sans],
             },
+            keyframes: {
+                shimmer: {
+                    '100%': { transform: 'translateX(100%)' }
+                }
+            }
         },
     },
 

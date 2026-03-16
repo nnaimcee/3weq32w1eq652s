@@ -1,162 +1,225 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            📷 Scan QR Code / Barcode
+        <h2 class="font-bold text-xl text-slate-800 leading-tight">
+            Scanner
         </h2>
     </x-slot>
 
-    <div class="py-8">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    {{-- Full-screen Focus Mode Layout --}}
+    <div class="relative min-h-[calc(100vh-4rem)] w-full bg-slate-900 flex flex-col transition-all duration-300">
+        
+        {{-- Background glow --}}
+        <div id="bg-glow" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vh] bg-blue-500/20 blur-[120px] rounded-full pointer-events-none transition-colors duration-500"></div>
+
+        <div class="flex-1 w-full max-w-2xl mx-auto px-4 py-6 sm:py-10 flex flex-col relative z-10">
 
             {{-- Flash Messages --}}
-            @if (session('success'))
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
-                    {{ session('success') }}
-                </div>
-            @endif
-            @if ($errors->any())
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-                    <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
-                </div>
-            @endif
-
-            {{-- Mode Tabs --}}
-            <div class="flex mb-4 bg-white rounded-xl shadow overflow-hidden">
-                <button id="tab-inbound" onclick="switchMode('inbound')"
-                    class="flex-1 py-3 text-center font-bold text-blue-600 bg-blue-50 border-b-4 border-blue-500 transition">
-                    📥 รับเข้า (Inbound)
-                </button>
-                <button id="tab-outbound" onclick="switchMode('outbound')"
-                    class="flex-1 py-3 text-center font-bold text-gray-500 hover:text-red-600 transition">
-                    📤 เบิกออก (Outbound)
-                </button>
+            <div id="flash-messages" class="w-full mb-6">
+                @if (session('success'))
+                    <div class="bg-emerald-500/20 border border-emerald-500/50 backdrop-blur-md text-emerald-100 px-5 py-4 rounded-2xl shadow-[0_8px_30px_rgba(16,185,129,0.2)] flex items-start gap-3">
+                        <div class="bg-emerald-500 text-white rounded-lg p-1 shadow-sm"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>
+                        <div>
+                            <p class="font-bold text-sm text-emerald-50">สำเร็จ!</p>
+                            <p class="text-xs font-medium text-emerald-200/90">{{ session('success') }}</p>
+                        </div>
+                    </div>
+                @endif
+                @if ($errors->any())
+                    <div class="bg-rose-500/20 border border-rose-500/50 backdrop-blur-md text-rose-100 px-5 py-4 rounded-2xl shadow-[0_8px_30px_rgba(244,63,94,0.2)] flex items-start gap-3">
+                        <div class="bg-rose-500 text-white rounded-lg p-1 shadow-sm"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+                        <div>
+                            <p class="font-bold text-sm text-rose-50">พบข้อผิดพลาด</p>
+                            <ul class="list-disc list-inside space-y-0.5 mt-1 font-medium text-xs text-rose-200/90">
+                                @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+                            </ul>
+                        </div>
+                    </div>
+                @endif
             </div>
 
-            {{-- Camera Scanner --}}
-            <div class="bg-white shadow-sm sm:rounded-xl p-4 mb-4 border-2" id="scanner-card">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="font-bold text-gray-700">📷 กล้องสแกน</h3>
+            {{-- Header / Mode Toggle --}}
+            <div class="mb-6 sm:mb-10">
+                <div class="bg-slate-800/80 backdrop-blur-xl p-1.5 rounded-[1.5rem] border border-slate-700/50 shadow-2xl flex">
+                    <button id="tab-inbound" onclick="switchMode('inbound')"
+                        class="flex-1 py-3.5 text-center font-bold text-sm sm:text-base rounded-xl transition-all duration-300 shadow-sm
+                               bg-blue-600 text-white ring-1 ring-blue-500/50">
+                        📥 รับเข้าคลัง (Inbound)
+                    </button>
+                    <button id="tab-outbound" onclick="switchMode('outbound')"
+                        class="flex-1 py-3.5 text-center font-bold text-sm sm:text-base rounded-xl transition-all duration-300
+                               text-slate-400 hover:text-slate-200 hover:bg-slate-700/50">
+                        📤 เบิกสินค้า (Outbound)
+                    </button>
+                </div>
+            </div>
+
+            {{-- Scanner Viewfinder --}}
+            <div class="w-full bg-slate-800/50 backdrop-blur-md rounded-[2rem] border border-slate-700/50 shadow-2xl overflow-hidden mb-6 flex flex-col">
+                <div class="p-4 sm:p-5 flex items-center justify-between border-b border-slate-700/50 bg-slate-800/80">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-slate-700 text-slate-300 flex items-center justify-center text-xl shadow-inner border border-slate-600">📷</div>
+                        <div>
+                            <h3 class="font-black text-slate-100 tracking-tight">กล้องสแกนบาร์โค้ด</h3>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Camera Scanner</p>
+                        </div>
+                    </div>
                     <div class="flex gap-2">
                         <button id="btn-start" onclick="startScanner()"
-                            class="bg-green-500 hover:bg-green-700 text-white text-sm font-bold py-1.5 px-4 rounded-full transition">
-                            ▶ เปิดกล้อง
+                            class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold py-2 px-5 rounded-xl text-sm transition-all shadow-sm flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> เปิดกล้อง
                         </button>
                         <button id="btn-stop" onclick="stopScanner()"
-                            class="hidden bg-red-500 hover:bg-red-700 text-white text-sm font-bold py-1.5 px-4 rounded-full transition">
+                            class="hidden bg-slate-700 hover:bg-slate-600 text-slate-300 border border-slate-600 font-bold py-2 px-5 rounded-xl text-sm transition-all shadow-sm flex items-center gap-2">
                             ⏹ ปิดกล้อง
                         </button>
                     </div>
                 </div>
-                <div id="reader" class="w-full rounded-lg overflow-hidden bg-gray-900" style="min-height: 280px;"></div>
+
+                {{-- Camera Feed Area --}}
+                <div class="relative w-full aspect-square sm:aspect-video bg-black max-h-[400px]">
+                    <div id="reader" class="absolute inset-0 w-full h-full"></div>
+                    
+                    {{-- Overlay Target (CSS drawn) --}}
+                    <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+                        <div class="w-2/3 h-1/2 border-2 border-white/20 rounded-2xl relative">
+                            <!-- Corners -->
+                            <div class="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-blue-500 rounded-tl-2xl"></div>
+                            <div class="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-blue-500 rounded-tr-2xl"></div>
+                            <div class="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-blue-500 rounded-bl-2xl"></div>
+                            <div class="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-blue-500 rounded-br-2xl"></div>
+                            <!-- Crosshair -->
+                            <div id="scan-laser" class="absolute top-1/2 left-0 w-full h-[2px] bg-red-500/80 shadow-[0_0_10px_rgba(239,68,68,0.8)] -translate-y-1/2 hidden"></div>
+                        </div>
+                    </div>
+                </div>
 
                 {{-- Manual Input --}}
-                <div class="mt-3 flex gap-2">
-                    <input type="text" id="manual-barcode" placeholder="หรือพิมพ์บาร์โค้ด/สแกนเนอร์..."
-                        class="flex-1 border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500">
-                    <button onclick="manualLookup()"
-                        class="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-4 rounded-lg text-sm transition">
-                        🔍 ค้นหา
-                    </button>
-                </div>
-            </div>
-
-            {{-- Product Info Card (hidden until scan) --}}
-            <div id="product-card" class="hidden bg-white shadow-lg sm:rounded-xl overflow-hidden mb-4 border-2 border-green-300">
-                <div class="bg-gradient-to-r from-green-500 to-emerald-600 p-4 text-white">
-                    <div class="flex items-center justify-between">
-                        <h3 class="font-bold text-lg">✅ พบสินค้า</h3>
-                        <button onclick="resetScanner()" class="text-white/80 hover:text-white text-sm">✕ ล้างข้อมูล</button>
-                    </div>
-                </div>
-                <div class="p-5">
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <p class="text-xs text-gray-400 uppercase font-bold">ชื่อสินค้า</p>
-                            <p id="info-name" class="text-lg font-bold text-gray-800">-</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-400 uppercase font-bold">รหัส SKU</p>
-                            <p id="info-sku" class="text-lg font-mono font-bold text-gray-800">-</p>
-                        </div>
-                    </div>
-                    <div class="bg-gray-50 rounded-xl p-4 border">
-                        <div class="grid grid-cols-3 gap-4 text-center">
-                            <div>
-                                <p class="text-xs text-gray-400 uppercase font-bold">สต็อกรวม</p>
-                                <p id="info-stock" class="text-2xl font-black text-blue-600">0</p>
+                <div class="p-4 sm:p-5 bg-slate-800/80 border-t border-slate-700/50">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">หรือระบุบาร์โค้ดด้วยตนเอง</p>
+                    <div class="flex gap-2">
+                        <div class="relative flex-1 group">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-400">
+                                <span class="text-slate-500 text-lg group-focus-within:text-blue-400">⌨️</span>
                             </div>
-                            <div>
-                                <p class="text-xs text-gray-400 uppercase font-bold">จองแล้ว</p>
-                                <p id="info-reserved" class="text-2xl font-black text-yellow-600">0</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-400 uppercase font-bold">พร้อมเบิก</p>
-                                <p id="info-available" class="text-2xl font-black text-green-600">0</p>
-                            </div>
+                            <input type="text" id="manual-barcode" placeholder="พิมพ์บาร์โค้ด..." autocomplete="off"
+                                class="w-full pl-12 pr-4 py-3.5 bg-slate-900 border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold transition-all shadow-inner text-slate-200 placeholder-slate-500">
                         </div>
+                        <button onclick="manualLookup()"
+                            class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-3.5 px-6 rounded-xl shadow-md transition-all text-sm border border-slate-600 flex items-center justify-center shrink-0">
+                            ค้นหา
+                        </button>
                     </div>
                 </div>
             </div>
 
-            {{-- Action Form --}}
-            <div id="action-form" class="hidden bg-white shadow-lg sm:rounded-xl p-5 border-2" style="border-color: var(--form-border-color, #3b82f6);">
+            {{-- Product Info & Action Card (Hidden initially) --}}
+            <div id="product-card" class="hidden w-full bg-slate-800/90 backdrop-blur-xl rounded-[2rem] border-2 border-emerald-500/50 shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden mb-10 transform translate-y-4 opacity-0 transition-all duration-500">
+                
+                {{-- Success Header --}}
+                <div id="result-header" class="bg-emerald-500 px-6 py-4 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white text-sm backdrop-blur-sm">✓</div>
+                        <h3 class="font-black text-white tracking-tight text-lg">พบข้อมูลสินค้า</h3>
+                    </div>
+                    <button onclick="resetScanner()" class="w-8 h-8 bg-black/10 hover:bg-black/20 rounded-full flex items-center justify-center text-white transition-colors backdrop-blur-sm" title="ล้างข้อมูล">✕</button>
+                </div>
 
-                {{-- Inbound Form --}}
-                <form id="form-inbound" action="{{ route('inbound.store') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="barcode" id="form-barcode-in">
-                    <h3 class="font-bold text-blue-700 mb-4 text-lg">📥 รับสินค้าเข้าคลัง</h3>
+                <div class="p-6 sm:p-8 space-y-6">
+                    {{-- Product Details --}}
+                    <div class="bg-slate-900/50 rounded-2xl p-5 border border-slate-700/50">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <div>
+                                <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">ชื่อสินค้า (Product)</p>
+                                <p id="info-name" class="text-xl font-bold text-slate-100 leading-tight">-</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">รหัส SKU</p>
+                                <p id="info-sku" class="text-lg font-mono font-bold text-emerald-400 bg-emerald-400/10 inline-block px-2 py-0.5 rounded border border-emerald-400/20">-</p>
+                            </div>
+                        </div>
 
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">จำนวน (Quantity):</label>
-                        <input type="number" name="quantity" min="1" required
-                            class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 focus:outline-none focus:border-blue-500"
-                            placeholder="ระบุจำนวน">
+                        <div class="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-slate-700">
+                            <div class="text-center">
+                                <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">สต็อกรวม</p>
+                                <p id="info-stock" class="text-2xl font-black text-blue-400">0</p>
+                            </div>
+                            <div class="text-center border-l border-slate-700">
+                                <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">จองแล้ว</p>
+                                <p id="info-reserved" class="text-2xl font-black text-amber-400">0</p>
+                            </div>
+                            <div class="text-center border-l border-slate-700">
+                                <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">พร้อมเบิก</p>
+                                <p id="info-available" class="text-2xl font-black text-emerald-400">0</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Lot Number (ถ้ามี):</label>
-                        <input type="text" name="lot_number"
-                            class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 focus:outline-none focus:border-blue-500"
-                            placeholder="ระบุ Lot ID (ปล่อยว่างระบบจะสร้างให้)">
+                    {{-- Forms --}}
+                    <div id="action-form">
+                        {{-- Inbound Form --}}
+                        <form id="form-inbound" action="{{ route('inbound.store') }}" method="POST" class="space-y-5">
+                            @csrf
+                            <input type="hidden" name="barcode" id="form-barcode-in">
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-[11px] font-black text-slate-400 mb-1.5 uppercase tracking-widest">จำนวนรับเข้า <span class="text-rose-500">*</span></label>
+                                    <input type="number" name="quantity" min="1" required
+                                        class="w-full bg-slate-900 border border-slate-700 rounded-xl text-lg font-bold text-slate-100 px-4 py-3 placeholder-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center"
+                                        placeholder="0">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-black text-slate-400 mb-1.5 uppercase tracking-widest">ตำแหน่งเก็บ (Zone/Bin) <span class="text-rose-500">*</span></label>
+                                    <select name="location_id" required
+                                        class="w-full bg-slate-900 border border-slate-700 rounded-xl text-base font-bold text-slate-100 px-4 py-3.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">-- ระบุ Location --</option>
+                                        @foreach($locations as $location)
+                                            <option value="{{ $location->id }}">{{ $location->name }} (ว่าง: {{ ($location->capacity ?? 5000) - ($location->stocks_sum_quantity ?? 0) }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-black text-slate-400 mb-1.5 uppercase tracking-widest">Lot Number</label>
+                                <input type="text" name="lot_number"
+                                    class="w-full bg-slate-900 border border-slate-700 rounded-xl text-base font-mono text-slate-100 px-4 py-3 placeholder-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="ปล่อยว่างเพื่อสร้างอัตโนมัติ">
+                            </div>
+
+                            <button type="submit"
+                                class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-6 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all hover:-translate-y-1 text-lg flex items-center justify-center gap-2 border border-blue-500">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                                ยืนยันรับเข้าคลัง
+                            </button>
+                        </form>
+
+                        {{-- Outbound Form --}}
+                        <form id="form-outbound" class="hidden space-y-5" action="{{ route('outbound.store') }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="barcode" id="form-barcode-out">
+                            
+                            <div>
+                                <label class="block text-[11px] font-black text-slate-400 mb-1.5 uppercase tracking-widest">จำนวนต้องการเบิก <span class="text-rose-500">*</span></label>
+                                <input type="number" name="quantity" id="out-quantity" min="1" required
+                                    class="w-full bg-slate-900 border border-slate-700 rounded-xl text-[2rem] h-16 font-black text-slate-100 px-4 py-2 placeholder-slate-600 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-center"
+                                    placeholder="0">
+                                
+                                <div id="out-stock-warning" class="hidden mt-3 bg-rose-500/20 border border-rose-500/50 rounded-lg p-3 flex items-start gap-2">
+                                    <span class="text-rose-400 text-sm">⚠️</span>
+                                    <p class="text-rose-200 text-xs font-bold leading-tight pt-0.5">ระบุเยอะกว่าที่มีในคลัง <br><span class="font-medium opacity-80">(สูงสุด: <span id="max-allowed-text">0</span>)</span></p>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="out-submit-btn"
+                                class="w-full mt-2 bg-rose-600 hover:bg-rose-500 text-white font-bold py-4 px-6 rounded-xl shadow-[0_0_20px_rgba(225,29,72,0.4)] transition-all hover:-translate-y-1 text-lg flex items-center justify-center gap-2 border border-rose-500">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                                ยืนยันเบิกสินค้า
+                            </button>
+                        </form>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">ตำแหน่งจัดเก็บ (Location):</label>
-                        <select name="location_id" required
-                            class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 focus:outline-none focus:border-blue-500">
-                            <option value="">-- กรุณาเลือก --</option>
-                            @foreach($locations as $location)
-                                <option value="{{ $location->id }}">{{ $location->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <button type="submit"
-                        class="w-full bg-blue-600 hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg shadow-lg transition">
-                        💾 ยืนยันรับเข้าคลัง
-                    </button>
-                </form>
-
-                {{-- Outbound Form --}}
-                <form id="form-outbound" class="hidden" action="{{ route('outbound.store') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="barcode" id="form-barcode-out">
-                    <h3 class="font-bold text-red-700 mb-4 text-lg">📤 เบิกสินค้าออก</h3>
-
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">จำนวนที่ต้องการเบิก:</label>
-                        <input type="number" name="quantity" id="out-quantity" min="1" required
-                            class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 focus:outline-none focus:border-red-500"
-                            placeholder="ระบุจำนวน">
-                        <p id="out-stock-warning" class="text-red-500 text-xs mt-1 hidden font-bold">⚠️ จำนวนที่ระบุมากกว่าสินค้าที่มีในคลัง!</p>
-                    </div>
-
-                    <button type="submit" id="out-submit-btn"
-                        class="w-full bg-red-600 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-lg shadow-lg transition">
-                        📤 ยืนยันเบิกสินค้า
-                    </button>
-                </form>
+                </div>
             </div>
 
         </div>
@@ -178,22 +241,29 @@
             const tabOut = document.getElementById('tab-outbound');
             const formIn = document.getElementById('form-inbound');
             const formOut = document.getElementById('form-outbound');
-            const actionForm = document.getElementById('action-form');
+            const productCard = document.getElementById('product-card');
+            const resultHeader = document.getElementById('result-header');
+            const bgGlow = document.getElementById('bg-glow');
 
             if (mode === 'inbound') {
-                tabIn.className = 'flex-1 py-3 text-center font-bold text-blue-600 bg-blue-50 border-b-4 border-blue-500 transition';
-                tabOut.className = 'flex-1 py-3 text-center font-bold text-gray-500 hover:text-red-600 transition';
+                tabIn.className = 'flex-1 py-3.5 text-center font-bold text-sm sm:text-base rounded-xl transition-all duration-300 shadow-sm bg-blue-600 text-white ring-1 ring-blue-500/50';
+                tabOut.className = 'flex-1 py-3.5 text-center font-bold text-sm sm:text-base rounded-xl transition-all duration-300 text-slate-400 hover:text-slate-200 hover:bg-slate-700/50';
                 formIn.classList.remove('hidden');
                 formOut.classList.add('hidden');
-                actionForm.style.setProperty('--form-border-color', '#3b82f6');
-                actionForm.style.borderColor = '#3b82f6';
+                
+                productCard.style.borderColor = 'rgba(16, 185, 129, 0.5)'; // Emerald
+                resultHeader.className = 'bg-emerald-500 px-6 py-4 flex items-center justify-between';
+                bgGlow.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vh] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none transition-colors duration-500';
+
             } else {
-                tabIn.className = 'flex-1 py-3 text-center font-bold text-gray-500 hover:text-blue-600 transition';
-                tabOut.className = 'flex-1 py-3 text-center font-bold text-red-600 bg-red-50 border-b-4 border-red-500 transition';
+                tabIn.className = 'flex-1 py-3.5 text-center font-bold text-sm sm:text-base rounded-xl transition-all duration-300 text-slate-400 hover:text-slate-200 hover:bg-slate-700/50';
+                tabOut.className = 'flex-1 py-3.5 text-center font-bold text-sm sm:text-base rounded-xl transition-all duration-300 shadow-sm bg-rose-600 text-white ring-1 ring-rose-500/50';
                 formIn.classList.add('hidden');
                 formOut.classList.remove('hidden');
-                actionForm.style.setProperty('--form-border-color', '#ef4444');
-                actionForm.style.borderColor = '#ef4444';
+                
+                productCard.style.borderColor = 'rgba(225, 29, 72, 0.5)'; // Rose
+                resultHeader.className = 'bg-rose-500 px-6 py-4 flex items-center justify-between';
+                bgGlow.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vh] bg-rose-500/10 blur-[120px] rounded-full pointer-events-none transition-colors duration-500';
             }
         }
 
@@ -202,9 +272,10 @@
             if (isScanning) return;
 
             html5QrCode = new Html5Qrcode("reader");
+            const laser = document.getElementById('scan-laser');
 
             html5QrCode.start(
-                { facingMode: "environment" }, // ใช้กล้องหลัง
+                { facingMode: "environment" },
                 {
                     fps: 10,
                     qrbox: { width: 250, height: 250 },
@@ -216,46 +287,45 @@
                 isScanning = true;
                 document.getElementById('btn-start').classList.add('hidden');
                 document.getElementById('btn-stop').classList.remove('hidden');
+                laser.classList.remove('hidden');
             }).catch(err => {
                 alert('❌ ไม่สามารถเปิดกล้องได้: ' + err);
             });
         }
 
         function stopScanner() {
+            const laser = document.getElementById('scan-laser');
             if (html5QrCode && isScanning) {
                 html5QrCode.stop().then(() => {
                     html5QrCode.clear();
                     isScanning = false;
                     document.getElementById('btn-start').classList.remove('hidden');
                     document.getElementById('btn-stop').classList.add('hidden');
+                    laser.classList.add('hidden');
+                    document.getElementById('reader').innerHTML = ''; // clear completely
                 });
             }
         }
 
         function onScanSuccess(decodedText, decodedResult) {
-            // หยุดสแกนชั่วคราวเพื่อไม่ให้สแกนซ้ำ
             stopScanner();
-
-            // เสียงแจ้งเตือน (beep)
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
-                osc.type = 'sine';
-                osc.frequency.value = 1000;
-                osc.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.15);
-            } catch(e) {}
-
-            // ใส่ค่าที่สแกนได้ลงช่อง manual
+            playBeep();
             document.getElementById('manual-barcode').value = decodedText;
-
-            // ดึงข้อมูลสินค้า
             fetchProduct(decodedText);
         }
 
-        function onScanFailure(error) {
-            // ไม่ต้องทำอะไร — สแกนไม่เจอก็วนต่อ
+        function onScanFailure(error) {}
+
+        function playBeep() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                osc.type = 'square';
+                osc.frequency.value = 800;
+                osc.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } catch(e) {}
         }
 
         // ======== Manual Input ========
@@ -264,7 +334,6 @@
             if (val) fetchProduct(val);
         }
 
-        // กด Enter ในช่อง manual
         document.getElementById('manual-barcode').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -274,23 +343,29 @@
 
         // ======== Fetch Product Data ========
         function fetchProduct(barcode) {
+            
+            // Show loading state roughly
+            document.getElementById('manual-barcode').disabled = true;
+            
             fetch(`/api/products/${encodeURIComponent(barcode)}`)
                 .then(r => r.json())
                 .then(data => {
+                    document.getElementById('manual-barcode').disabled = false;
                     if (data.success) {
                         showProductInfo(data.product, barcode);
                     } else {
-                        alert('❌ ไม่พบสินค้าสำหรับรหัส: ' + barcode);
+                        showError('ไม่พบสินค้าสำหรับบาร์โค้ด: ' + barcode);
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    alert('❌ เกิดข้อผิดพลาดในการค้นหาสินค้า');
+                    document.getElementById('manual-barcode').disabled = false;
+                    showError('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
                 });
         }
 
         function showProductInfo(product, barcode) {
-            // แสดงข้อมูลสินค้า
+            // Populate
             document.getElementById('info-name').innerText = product.name;
             document.getElementById('info-sku').innerText = product.sku;
 
@@ -303,41 +378,85 @@
             document.getElementById('info-available').innerText = available.toLocaleString();
 
             currentMaxStock = available;
+            document.getElementById('max-allowed-text').innerText = available.toLocaleString();
 
-            // ใส่ barcode ลง form
+            // Set forms
             document.getElementById('form-barcode-in').value = barcode;
             document.getElementById('form-barcode-out').value = barcode;
+            
+            // Output validation reset
+            document.getElementById('out-quantity').value = '';
+            document.getElementById('out-stock-warning').classList.add('hidden');
+            const outBtn = document.getElementById('out-submit-btn');
+            outBtn.disabled = false;
+            outBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'saturate-0');
 
-            // แสดง cards
-            document.getElementById('product-card').classList.remove('hidden');
-            document.getElementById('action-form').classList.remove('hidden');
-
-            // scroll ลงไปที่ product card
-            document.getElementById('product-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Show card with animation
+            const card = document.getElementById('product-card');
+            card.classList.remove('hidden');
+            
+            // trigger reflow
+            void card.offsetWidth;
+            
+            card.classList.remove('translate-y-4', 'opacity-0');
+            card.classList.add('translate-y-0', 'opacity-100');
+            
+            // Scroll to it
+            setTimeout(() => {
+                card.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                // Auto focus qty input based on mode
+                if (currentMode === 'inbound') {
+                    document.querySelector('#form-inbound input[name="quantity"]').focus();
+                } else {
+                    document.getElementById('out-quantity').focus();
+                }
+            }, 300);
         }
 
         function resetScanner() {
-            document.getElementById('product-card').classList.add('hidden');
-            document.getElementById('action-form').classList.add('hidden');
+            const card = document.getElementById('product-card');
+            card.classList.remove('translate-y-0', 'opacity-100');
+            card.classList.add('translate-y-4', 'opacity-0');
+            
+            setTimeout(() => {
+                card.classList.add('hidden');
+                document.getElementById('manual-barcode').value = '';
+                document.getElementById('manual-barcode').focus();
+                currentMaxStock = 0;
+            }, 300);
+        }
+
+        function showError(msg) {
+            alert('⚠️ ' + msg);
             document.getElementById('manual-barcode').value = '';
-            currentMaxStock = 0;
+            document.getElementById('manual-barcode').focus();
         }
 
         // ======== Outbound stock validation ========
         document.getElementById('out-quantity').addEventListener('input', function() {
-            const val = parseInt(this.value);
+            const val = parseInt(this.value) || 0;
             const warning = document.getElementById('out-stock-warning');
             const btn = document.getElementById('out-submit-btn');
 
             if (val > currentMaxStock) {
                 warning.classList.remove('hidden');
                 btn.disabled = true;
-                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                btn.classList.add('opacity-50', 'cursor-not-allowed', 'saturate-0');
             } else {
                 warning.classList.add('hidden');
                 btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.classList.remove('opacity-50', 'cursor-not-allowed', 'saturate-0');
             }
         });
+        
+        // Style html5-qrcode UI
+        const styleHtml5QrCode = () => {
+             const reader = document.getElementById('reader');
+             if(reader) {
+                 const btn = reader.querySelector('button');
+                 if(btn) btn.className = 'bg-slate-700 text-white px-4 py-2 rounded-lg text-sm';
+             }
+        }
+        setInterval(styleHtml5QrCode, 1000);
     </script>
 </x-app-layout>

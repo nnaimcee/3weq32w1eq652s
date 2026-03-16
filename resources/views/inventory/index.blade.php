@@ -1,14 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            📊 รายการสินค้าคงคลัง
+        <h2 class="font-bold text-xl text-slate-800 leading-tight">
+            สต็อกสินค้า (Inventory)
         </h2>
     </x-slot>
 
-    <div class="py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="py-6 w-full relative z-10">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
-            {{-- Summary Cards --}}
+            {{-- Top KPIs --}}
             @php
                 $totalProducts = $products->count();
                 $totalQty = $products->sum('stocks_sum_quantity');
@@ -16,303 +16,322 @@
                 $totalTransit = $products->sum('transit_quantity');
                 $totalAvailable = $totalQty - $totalReserved;
             @endphp
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                <div class="bg-white rounded-xl shadow p-4 border-l-4 border-indigo-500">
-                    <p class="text-xs text-gray-500 font-bold">📋 รายการสินค้า</p>
-                    <p class="text-2xl font-black text-indigo-600">{{ $totalProducts }}</p>
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="bg-white rounded-3xl p-5 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-slate-200/60 flex flex-col justify-center">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-slate-300"></span> รายการสินค้า</p>
+                    <p class="text-3xl font-black text-slate-800 tracking-tight">{{ $totalProducts }}</p>
                 </div>
-                <div class="bg-white rounded-xl shadow p-4 border-l-4 border-blue-500">
-                    <p class="text-xs text-gray-500 font-bold">📦 สต็อกในคลัง</p>
-                    <p class="text-2xl font-black text-blue-600">{{ number_format($totalQty) }}</p>
+                <div class="bg-white rounded-3xl p-5 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-slate-200/60 flex flex-col justify-center">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-400"></span> สต็อกรวม</p>
+                    <p class="text-3xl font-black text-blue-600 tracking-tight">{{ number_format($totalQty) }}</p>
                 </div>
-                <div class="bg-white rounded-xl shadow p-4 border-l-4 border-yellow-500">
-                    <p class="text-xs text-gray-500 font-bold">🔒 ถูกจอง</p>
-                    <p class="text-2xl font-black text-yellow-600">{{ number_format($totalReserved) }}</p>
+                <div class="bg-white rounded-3xl p-5 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-slate-200/60 flex flex-col justify-center">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400"></span> ถูกจอง</p>
+                    <p class="text-3xl font-black text-amber-500 tracking-tight">{{ number_format($totalReserved) }}</p>
                 </div>
-                <div class="bg-white rounded-xl shadow p-4 border-l-4 border-orange-500">
-                    <p class="text-xs text-gray-500 font-bold">🚚 ระหว่างทาง</p>
-                    <p class="text-2xl font-black text-orange-500">{{ number_format($totalTransit) }}</p>
+                <div class="bg-white rounded-3xl p-5 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-slate-200/60 flex flex-col justify-center">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span> ระหว่างทาง</p>
+                    <p class="text-3xl font-black text-rose-500 tracking-tight">{{ number_format($totalTransit) }}</p>
                 </div>
-                <div class="bg-white rounded-xl shadow p-4 border-l-4 border-green-500">
-                    <p class="text-xs text-gray-500 font-bold">✅ พร้อมจ่าย</p>
-                    <p class="text-2xl font-black text-green-600">{{ number_format($totalAvailable) }}</p>
+                <div class="col-span-2 lg:col-span-1 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl p-5 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] flex items-center justify-between relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 bottom-0 w-32 bg-white/10 rounded-full blur-[30px] -z-10 group-hover:scale-150 transition-transform duration-700"></div>
+                    <div>
+                        <p class="text-xs font-semibold text-emerald-100 uppercase tracking-widest mb-1">พร้อมจ่าย</p>
+                        <p class="text-3xl font-black text-white tracking-tight">{{ number_format($totalAvailable) }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-xl shadow-sm border border-white/10">✅</div>
                 </div>
             </div>
 
-            {{-- Search Bar --}}
-            <div class="mb-6 bg-white p-4 rounded-xl shadow border border-gray-200">
-                <form action="{{ route('inventory.index') }}" method="GET" class="flex flex-col sm:flex-row gap-3">
-                    <div class="flex-1 relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span class="text-gray-500">🔍</span>
+            {{-- Main List Section --}}
+            <div class="bg-white rounded-[2rem] shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-slate-200/60 overflow-hidden flex flex-col min-h-[500px]">
+                
+                {{-- Toolbar (Search & Actions) --}}
+                <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="relative w-full sm:w-96 group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg class="w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </div>
-                        <input type="text" id="searchInput" name="search" value="{{ request('search') }}" placeholder="ค้นหารหัสสินค้า (SKU) หรือ ชื่อสินค้า..." onkeyup="filterProducts()" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                        <input type="text" id="searchInput" name="search" value="{{ request('search') }}" onkeyup="filterProducts()" placeholder="ค้นหาสินค้า (ชื่อ, SKU, Barcode)..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl shadow-sm focus:border-indigo-400 focus:ring focus:ring-indigo-200/50 text-sm transition-all focus:outline-none">
                     </div>
-                    <div class="flex gap-2">
-                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-6 rounded-lg shadow transition w-full sm:w-auto text-sm">
-                            ค้นหา
-                        </button>
-                        @if(request('search'))
-                            <a href="{{ route('inventory.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg shadow transition flex items-center justify-center w-full sm:w-auto text-sm">
-                                ล้าง
-                            </a>
-                        @endif
-                    </div>
-                </form>
-            </div>
-
-            {{-- Product Cards --}}
-            @if($products->isEmpty())
-                <div class="php-empty-msg bg-white rounded-2xl shadow-md p-8 text-center border border-gray-200 mb-4">
-                    <p class="text-gray-500 py-4 font-bold text-lg">❌ ไม่พบสินค้าที่ค้นหา</p>
-                </div>
-            @endif
-
-            {{-- Message when client-side search finds no results --}}
-            <div id="emptySearchMessage" class="bg-white rounded-2xl shadow-md p-8 text-center border border-gray-200 mb-4" style="display: none;">
-                <p class="text-gray-500 py-4 font-bold text-lg">❌ ไม่พบสินค้าที่ค้นหา</p>
-            </div>
-
-            @foreach ($products as $product)
-            @php
-                $qty = $product->stocks_sum_quantity ?? 0;
-                $reserved = $product->stocks_sum_reserved_qty ?? 0;
-                $transit = $product->transit_quantity ?? 0;
-                $available = $qty - $reserved;
-                $storageStocks = $product->stocks->filter(fn($s) => !$transitLocationIds->contains($s->location_id));
-                $transitStocks = $product->stocks->filter(fn($s) => $transitLocationIds->contains($s->location_id));
-                $locationGroups = $storageStocks->groupBy(fn($s) => $s->location ? $s->location->name : 'ไม่ทราบ');
-            @endphp
-            <div class="product-card bg-white rounded-2xl shadow-md mb-4 overflow-hidden border border-gray-200" data-search="{{ mb_strtolower($product->sku . ' ' . $product->name) }}">
-                {{-- Product Header Row --}}
-                <div class="p-4 cursor-pointer hover:bg-gray-50 transition"
-                     onclick="toggleDetail('detail-{{ $product->id }}')">
-
-                    {{-- Top row: QR + Name --}}
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="flex-shrink-0">
-                            @if($product->qr_code_image)
-                                <img id="qrcode-img-{{ $product->id }}"
-                                     src="{{ $product->qr_code_image }}"
-                                     class="w-12 h-12 rounded border" alt="QR">
-                            @else
-                                <div class="w-12 h-12 rounded border bg-gray-100 flex items-center justify-center text-gray-400 text-xs">No QR</div>
-                            @endif
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <h3 class="font-bold text-gray-800 text-base sm:text-lg break-words leading-tight">{{ $product->name }}</h3>
-                            <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-400 mt-0.5">
-                                <span class="font-mono">{{ $product->sku }}</span>
-                                <span>|</span>
-                                <span class="font-mono">{{ $product->barcode }}</span>
-                            </div>
-                        </div>
-                        {{-- Expand arrow (top right) --}}
-                        <svg id="arrow-{{ $product->id }}" class="w-5 h-5 text-gray-400 transition-transform duration-200 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </div>
-
-                    {{-- Bottom row: Stats + Action buttons --}}
-                    <div class="flex items-center justify-between flex-wrap gap-y-2">
-                        {{-- Stats --}}
-                        <div class="flex items-center gap-3 sm:gap-4">
-                            <div class="text-center">
-                                <p class="text-[10px] sm:text-xs text-gray-400 leading-tight">ในคลัง</p>
-                                <p class="text-sm sm:text-lg font-black text-blue-600 leading-tight">{{ number_format($qty) }}</p>
-                            </div>
-                            <div class="text-center">
-                                <p class="text-[10px] sm:text-xs text-gray-400 leading-tight">จอง</p>
-                                <p class="text-sm sm:text-lg font-black text-yellow-600 leading-tight">{{ number_format($reserved) }}</p>
-                            </div>
-                            @if($transit > 0)
-                            <div class="text-center">
-                                <p class="text-[10px] sm:text-xs text-gray-400 leading-tight">ระหว่างทาง</p>
-                                <p class="text-sm sm:text-lg font-black text-orange-500 leading-tight">🚚 {{ number_format($transit) }}</p>
-                            </div>
-                            @endif
-                            <div class="text-center border-l border-gray-200 pl-3">
-                                <p class="text-[10px] sm:text-xs text-gray-400 leading-tight">พร้อมจ่าย</p>
-                                <p class="text-sm sm:text-lg font-black {{ $available > 0 ? 'text-green-600' : 'text-red-500' }} leading-tight">{{ number_format($available) }}</p>
-                            </div>
-                        </div>
-
-                        {{-- Action buttons --}}
-                        <div class="flex gap-1.5" onclick="event.stopPropagation()">
-                            @if(auth()->user()->role === 'admin')
-                            <button onclick="openReservationModal('{{ $product->id }}', '{{ addslashes($product->name) }}', {{ $qty }}, {{ $reserved }})"
-                                class="bg-yellow-500 hover:bg-yellow-600 text-white py-1.5 px-2 sm:px-3 rounded-lg text-xs font-bold shadow-sm transition">
-                                🔒<span class="hidden sm:inline ml-1">จอง</span>
-                            </button>
-                            @endif
-                            <button onclick="printStickerDirect('{{ addslashes($product->name) }}', '{{ $product->sku }}', '{{ $product->id }}')"
-                                class="bg-gray-700 hover:bg-black text-white py-1.5 px-2 sm:px-3 rounded-lg text-xs font-bold shadow-sm transition">
-                                🖨️
-                            </button>
-                            <button onclick="printQrStickerDirect('{{ addslashes($product->name) }}', '{{ $product->sku }}', '{{ $product->id }}')"
-                                class="bg-indigo-600 hover:bg-indigo-800 text-white py-1.5 px-2 sm:px-3 rounded-lg text-xs font-bold shadow-sm transition">
-                                📱
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-
-                {{-- Expandable Detail Section --}}
-                <div id="detail-{{ $product->id }}" class="hidden border-t border-gray-200 bg-gray-50">
-                    @if($storageStocks->isEmpty() && $transitStocks->isEmpty())
-                        <div class="p-6 text-center text-gray-400">
-                            <span class="text-3xl block mb-2">🪹</span>
-                            ไม่มีสต็อกของสินค้านี้ในระบบ
-                        </div>
-                    @else
-                        <div class="p-4">
-                            {{-- Storage stocks grouped by location --}}
-                            @if($locationGroups->isNotEmpty())
-                            <h4 class="text-sm font-bold text-gray-500 uppercase mb-3">📍 แยกตามตำแหน่งจัดเก็บ</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
-                                @foreach($locationGroups as $locationName => $stocks)
-                                @php
-                                    $locQty = $stocks->sum('quantity');
-                                    $locReserved = $stocks->sum('reserved_qty');
-                                    $locAvailable = $locQty - $locReserved;
-                                    $location = $stocks->first()->location;
-                                @endphp
-                                <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-                                    <div class="flex items-center justify-between mb-3">
-                                        <div>
-                                            <span class="font-bold text-gray-800">📍 {{ $locationName }}</span>
-                                            @if($location)
-                                            <span class="text-xs text-gray-400 ml-1">Zone: {{ $location->zone }}</span>
-                                            @endif
-                                        </div>
-                                        <span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">{{ $stocks->count() }} lot</span>
-                                    </div>
-                                    {{-- Stats --}}
-                                    <div class="grid grid-cols-3 gap-2 text-center text-xs mb-3">
-                                        <div class="bg-blue-50 rounded-lg p-2">
-                                            <p class="text-gray-400">จำนวน</p>
-                                            <p class="font-black text-blue-600 text-base">{{ number_format($locQty) }}</p>
-                                        </div>
-                                        <div class="bg-yellow-50 rounded-lg p-2">
-                                            <p class="text-gray-400">จอง</p>
-                                            <p class="font-black text-yellow-600 text-base">{{ number_format($locReserved) }}</p>
-                                        </div>
-                                        <div class="bg-green-50 rounded-lg p-2">
-                                            <p class="text-gray-400">พร้อมจ่าย</p>
-                                            <p class="font-black text-green-600 text-base">{{ number_format($locAvailable) }}</p>
-                                        </div>
-                                    </div>
-                                    {{-- Lot details --}}
-                                    <div class="space-y-1">
-                                        @foreach($stocks as $stock)
-                                        <div class="flex items-center justify-between text-xs bg-gray-50 rounded-lg px-3 py-1.5">
-                                            <div class="text-gray-500">
-                                                <span class="font-mono">{{ $stock->lot_number ?? '-' }}</span>
-                                                <span class="text-gray-300 mx-1">|</span>
-                                                <span>{{ $stock->received_date ? date('d/m/Y', strtotime($stock->received_date)) : '-' }}</span>
-                                            </div>
-                                            <div class="flex gap-3">
-                                                <span class="text-blue-600 font-bold">{{ $stock->quantity }}</span>
-                                                @if($stock->reserved_qty > 0)
-                                                <span class="text-yellow-600 font-bold">(จอง {{ $stock->reserved_qty }})</span>
-                                                @endif
-                                            </div>
-                                        </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                                @endforeach
-                            </div>
-                            @endif
-
-                            {{-- Transit stocks --}}
-                            @if($transitStocks->isNotEmpty())
-                            <h4 class="text-sm font-bold text-orange-500 uppercase mb-3">🚚 ระหว่างทาง (Transit)</h4>
-                            <div class="bg-orange-50 rounded-xl border border-orange-200 p-4">
-                                @foreach($transitStocks as $ts)
-                                <div class="flex items-center justify-between text-sm py-1.5">
-                                    <div class="text-gray-600">
-                                        <span class="font-mono text-xs">{{ $ts->lot_number ?? '-' }}</span>
-                                        <span class="text-gray-300 mx-1">|</span>
-                                        <span class="text-xs">{{ $ts->received_date ? date('d/m/Y', strtotime($ts->received_date)) : '-' }}</span>
-                                    </div>
-                                    <span class="font-bold text-orange-600">🚚 {{ number_format($ts->quantity) }} ชิ้น</span>
-                                </div>
-                                @endforeach
-                            </div>
-                            @endif
-
-                            {{-- Delete button (admin only) --}}
-                            @if(auth()->user()->role === 'admin')
-                            <div class="mt-4 pt-3 border-t border-gray-200 flex justify-end">
-                                <form action="{{ route('inventory.destroy', $product->id) }}" method="POST"
-                                    onsubmit="return confirm('⚠️ คุณแน่ใจใช่ไหมที่จะลบสินค้า {{ addslashes($product->name) }}?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-500 hover:text-red-700 text-xs font-bold transition">
-                                        🗑️ ลบสินค้านี้
-                                    </button>
-                                </form>
-                            </div>
-                            @endif
-                        </div>
+                    @if(auth()->user()->role === 'admin')
+                    <a href="{{ route('products.create') }}" class="inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-6 rounded-xl shadow-sm transition-colors text-sm w-full sm:w-auto">
+                        <span class="text-lg leading-none">+</span> เพิ่มสินค้า
+                    </a>
                     @endif
                 </div>
 
-                {{-- hidden barcode img for print --}}
-                @if($product->barcode_image)
-                <img id="barcode-img-{{ $product->id }}" src="{{ $product->barcode_image }}" style="display:none" alt="barcode">
-                @endif
+                {{-- Table Data Grid --}}
+                <div class="overflow-x-auto flex-1">
+                    <table class="w-full text-left border-collapse min-w-[800px]">
+                        <thead>
+                            <tr class="bg-white text-[10px] uppercase font-bold tracking-wider text-slate-400 border-b border-slate-100">
+                                <th class="px-6 py-4 w-16 text-center">QR</th>
+                                <th class="px-6 py-4">ข้อมูลสินค้า</th>
+                                <th class="px-6 py-4 text-right">ในคลัง</th>
+                                <th class="px-6 py-4 text-right">จอง</th>
+                                <th class="px-6 py-4 text-right">ระหว่างทาง</th>
+                                <th class="px-6 py-4 text-right">พร้อมจ่าย</th>
+                                <th class="px-6 py-4 w-10"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-sm" id="productTableBody">
+                            @forelse ($products as $product)
+                            @php
+                                $qty = $product->stocks_sum_quantity ?? 0;
+                                $reserved = $product->stocks_sum_reserved_qty ?? 0;
+                                $transit = $product->transit_quantity ?? 0;
+                                $available = $qty - $reserved;
+                            @endphp
+                            <tr class="product-row hover:bg-slate-50 cursor-pointer transition-colors group" data-search="{{ mb_strtolower($product->sku . ' ' . $product->name . ' ' . $product->barcode) }}" onclick="openPanel('{{ $product->id }}')">
+                                <td class="px-6 py-4 text-center">
+                                    @if($product->qr_code_image)
+                                        <img src="{{ $product->qr_code_image }}" class="w-10 h-10 rounded-lg border border-slate-200 object-cover shadow-sm" alt="QR" id="qrcode-img-{{ $product->id }}">
+                                    @else
+                                        <div class="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-[8px] text-slate-400 font-bold shadow-inner">NO QR</div>
+                                    @endif
+                                    @if($product->barcode_image)
+                                        <img id="barcode-img-{{ $product->id }}" src="{{ $product->barcode_image }}" style="display:none" alt="barcode">
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="font-bold text-slate-800 text-base group-hover:text-indigo-600 transition-colors">{{ $product->name }}</p>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="text-xs font-mono font-bold text-slate-600 bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-sm">{{ $product->sku }}</span>
+                                        <span class="text-[10px] text-slate-400 font-mono">{{ $product->barcode }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <span class="font-black text-blue-600 text-lg">{{ number_format($qty) }}</span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <span class="font-black text-amber-500 text-lg">{{ number_format($reserved) }}</span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <span class="font-black text-rose-500 text-lg">{{ $transit > 0 ? number_format($transit) : '-' }}</span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <span class="font-black {{ $available > 0 ? 'text-emerald-600' : 'text-slate-300' }} text-lg">{{ $available > 0 ? number_format($available) : '0' }}</span>
+                                </td>
+                                <td class="px-6 py-4 text-center text-slate-300 group-hover:text-indigo-500 transition-colors">
+                                    <svg class="w-5 h-5 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr id="emptyRow">
+                                <td colspan="7" class="p-12 text-center text-slate-400">
+                                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100"><span class="text-2xl">📦</span></div>
+                                    <p class="font-bold text-slate-600">ไม่มีรายการสินค้า</p>
+                                    <p class="text-sm mt-1">ลองเพิ่มสินค้าเข้าสู่ระบบ</p>
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            @endforeach
-
         </div>
     </div>
 
-    <!-- Reservation Modal -->
-    <div id="reservationModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 z-50 flex justify-center items-center backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-2xl shadow-2xl w-11/12 md:w-1/3 p-6 transform transition-all">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 class="text-xl font-bold text-gray-800">จัดการการจอง: <span id="resModalName" class="text-blue-600">...</span></h3>
-                <button onclick="closeReservationModal()" class="text-gray-400 hover:text-red-500 font-bold text-2xl leading-none">&times;</button>
+    {{-- Offcanvas Overlay --}}
+    <div id="slideOverOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] opacity-0 pointer-events-none transition-opacity duration-300" onclick="closeAllPanels()"></div>
+
+    {{-- Slide-Out Panels for each product --}}
+    @foreach ($products as $product)
+    @php
+        $qty = $product->stocks_sum_quantity ?? 0;
+        $reserved = $product->stocks_sum_reserved_qty ?? 0;
+        $transit = $product->transit_quantity ?? 0;
+        $available = $qty - $reserved;
+        $storageStocks = $product->stocks->filter(fn($s) => !$transitLocationIds->contains($s->location_id));
+        $transitStocks = $product->stocks->filter(fn($s) => $transitLocationIds->contains($s->location_id));
+        $locationGroups = $storageStocks->groupBy(fn($s) => $s->location ? $s->location->name : 'ไม่ทราบ');
+    @endphp
+    <div id="panel-{{ $product->id }}" class="fixed inset-y-0 right-0 z-[70] w-full max-w-md bg-slate-50 shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col pointer-events-none">
+        
+        {{-- Header --}}
+        <div class="px-6 py-5 border-b border-slate-200 bg-white flex items-start justify-between sticky top-0 z-10">
+            <div class="flex gap-4 items-center">
+                @if($product->qr_code_image)
+                    <img src="{{ $product->qr_code_image }}" class="w-12 h-12 rounded-xl border border-slate-200 shadow-sm" alt="QR">
+                @endif
+                <div>
+                    <h3 class="font-bold text-lg text-slate-800 leading-tight">{{ $product->name }}</h3>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-xs font-mono font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">{{ $product->sku }}</span>
+                    </div>
+                </div>
+            </div>
+            <button onclick="closePanel('{{ $product->id }}')" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        {{-- Content --}}
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            
+            {{-- Quick Actions --}}
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="printQrStickerDirect('{{ addslashes($product->name) }}', '{{ $product->sku }}', '{{ $product->id }}')" class="flex flex-col items-center justify-center p-3 bg-white border border-indigo-100 hover:border-indigo-300 hover:shadow-md rounded-2xl transition-all group">
+                    <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">📱</span>
+                    <span class="text-[10px] font-bold text-indigo-700 uppercase tracking-widest">พิมพ์ QR</span>
+                </button>
+                <button onclick="printStickerDirect('{{ addslashes($product->name) }}', '{{ $product->sku }}', '{{ $product->id }}')" class="flex flex-col items-center justify-center p-3 bg-white border border-slate-200 hover:border-slate-300 hover:shadow-md rounded-2xl transition-all group">
+                    <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">🖨️</span>
+                    <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">พิมพ์ Barcode</span>
+                </button>
+                @if(auth()->user()->role === 'admin')
+                <button onclick="openReservationModal('{{ $product->id }}', '{{ addslashes($product->name) }}', {{ $qty }}, {{ $reserved }})" class="col-span-2 flex flex-row items-center justify-center gap-2 p-3 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white shadow-md rounded-2xl transition-all font-bold text-sm">
+                    🔒 จัดการการจอง (Reserve)
+                </button>
+                @endif
             </div>
 
-            <div class="space-y-4">
-                <div class="bg-gray-50 p-4 rounded-lg border flex justify-between text-sm">
-                    <div>📦 มีทั้งหมด: <span id="resModalTotal" class="font-bold text-blue-600">0</span></div>
-                    <div>🔒 จองแล้ว: <span id="resModalReserved" class="font-bold text-yellow-600">0</span></div>
-                    <div>✅ ว่าง: <span id="resModalAvailable" class="font-bold text-green-600">0</span></div>
+            {{-- Summary Stats Mini --}}
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 grid grid-cols-3 divide-x divide-slate-100 shadow-sm">
+                <div class="text-center">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">รวมทั้งหมด</p>
+                    <p class="font-black text-blue-600 text-lg">{{ number_format($qty) }}</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">จองแล้ว</p>
+                    <p class="font-black text-amber-500 text-lg">{{ number_format($reserved) }}</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">พร้อมจ่าย</p>
+                    <p class="font-black text-emerald-600 text-lg">{{ number_format($available) }}</p>
+                </div>
+            </div>
+
+            {{-- Locations --}}
+            <div>
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">📍 ตำแหน่งจัดเก็บ</h4>
+                @if($locationGroups->isEmpty())
+                    <div class="bg-white rounded-xl border border-slate-100 p-6 text-center text-slate-400 text-sm">ไม่มีสต็อกในคลัง</div>
+                @else
+                    <div class="space-y-3">
+                        @foreach($locationGroups as $locationName => $stocks)
+                        @php
+                            $locQty = $stocks->sum('quantity');
+                            $locReserved = $stocks->sum('reserved_qty');
+                            $locAvailable = $locQty - $locReserved;
+                            $location = $stocks->first()->location;
+                        @endphp
+                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                            <div class="p-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                                <p class="font-bold text-slate-800 text-sm flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-indigo-400"></span> {{ $locationName }}</p>
+                                <p class="font-black text-blue-600">{{ number_format($locQty) }} <span class="text-xs font-semibold text-slate-400">ชิ้น</span></p>
+                            </div>
+                            <div class="p-3 bg-white space-y-2">
+                                @foreach($stocks as $stock)
+                                <div class="flex items-center justify-between text-xs py-1.5 border-b border-slate-50 last:border-0 last:pb-0">
+                                    <div class="flex flex-col">
+                                        <span class="font-mono font-bold text-slate-600 bg-slate-100 px-1 rounded">{{ $stock->lot_number ?? 'No Lot' }}</span>
+                                        <span class="text-[10px] text-slate-400 mt-0.5">{{ $stock->received_date ? date('d/m/y', strtotime($stock->received_date)) : '-' }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        @if($stock->reserved_qty > 0)
+                                            <span class="text-[10px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded font-bold border border-amber-100">จอง {{ $stock->reserved_qty }}</span>
+                                        @endif
+                                        <span class="font-bold text-slate-800 text-sm">{{ $stock->quantity }}</span>
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+            @if($transitStocks->isNotEmpty())
+            <div>
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">🚚 ระหว่างทาง</h4>
+                <div class="bg-white rounded-2xl border border-orange-200 overflow-hidden shadow-sm">
+                    @foreach($transitStocks as $ts)
+                    <div class="flex items-center justify-between p-3 border-b border-orange-50 last:border-0">
+                        <span class="font-mono text-xs font-bold text-slate-600 bg-slate-100 px-1.5 rounded">{{ $ts->lot_number ?? '-' }}</span>
+                        <span class="font-black text-orange-600 text-sm flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span> {{ number_format($ts->quantity) }}</span>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            @if(auth()->user()->role === 'admin')
+            <div class="pt-6 border-t border-slate-200 mt-auto">
+                <form action="{{ route('inventory.destroy', $product->id) }}" method="POST"
+                    onsubmit="return confirm('คุณแน่ใจใช่ไหมที่จะลบสินค้า {{ addslashes($product->name) }} ถาวร?');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="w-full py-3 border border-rose-200 text-rose-500 hover:bg-rose-50 hover:border-rose-300 font-bold rounded-xl transition-colors text-sm flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        ลบสินค้านี้ออกจากระบบ
+                    </button>
+                </form>
+            </div>
+            @endif
+
+        </div>
+    </div>
+    @endforeach
+
+    <!-- Reservation Modal -->
+    <div id="reservationModal" class="hidden fixed inset-0 bg-slate-900/60 z-[80] flex justify-center items-center backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-3xl shadow-2xl w-11/12 md:w-1/3 p-6 transform transition-all border border-slate-200/50">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-black text-slate-800 flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">🔒</span> จัดการการจอง</h3>
+                <button onclick="closeReservationModal()" class="w-8 h-8 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-full flex items-center justify-center transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="space-y-5">
+                <div>
+                     <p class="text-sm font-bold text-indigo-600 mb-3 bg-indigo-50 px-3 py-2 rounded-lg border border-indigo-100" id="resModalName">...</p>
+                </div>
+               
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 grid grid-cols-3 divide-x divide-slate-200">
+                    <div class="text-center">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">มีทั้งหมด</p>
+                        <p class="font-black text-blue-600 text-lg" id="resModalTotal">0</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">จองแล้ว</p>
+                        <p class="font-black text-amber-500 text-lg" id="resModalReserved">0</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">ว่าง</p>
+                        <p class="font-black text-emerald-600 text-lg" id="resModalAvailable">0</p>
+                    </div>
                 </div>
 
-                <div class="flex border-b">
-                    <button id="tabReserve" onclick="switchTab('reserve')" class="flex-1 py-2 font-bold text-yellow-600 border-b-2 border-yellow-500 bg-yellow-50">🔒 จองสินค้า (Reserve)</button>
-                    <button id="tabRelease" onclick="switchTab('release')" class="flex-1 py-2 font-bold text-gray-500 hover:text-green-600">🔓 ปลดจอง (Release)</button>
+                <div class="flex p-1 bg-slate-100 rounded-xl relative">
+                    <div id="tabIndicator" class="absolute w-1/2 h-full bg-white rounded-lg shadow-sm border border-slate-200/50 transition-transform duration-300 left-0 top-0"></div>
+                    <button id="tabReserve" onclick="switchTab('reserve')" class="flex-1 py-2 text-sm font-bold text-amber-600 relative z-10">จองสินค้า</button>
+                    <button id="tabRelease" onclick="switchTab('release')" class="flex-1 py-2 text-sm font-bold text-slate-500 relative z-10 transition-colors">ปลดจอง</button>
                 </div>
 
                 <form id="reservationForm" method="POST" action="{{ route('reservation.reserve') }}">
                     @csrf
                     <input type="hidden" name="product_id" id="resProductId">
 
-                    <div class="mt-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">📍 ตำแหน่งที่จะจอง:</label>
-                        <select name="location_id" id="resLocationSelect"
-                            class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                            <option value="">ทุกตำแหน่ง (FIFO อัตโนมัติ)</option>
-                        </select>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-slate-700 text-sm font-bold mb-2">ตำแหน่งที่จะจอง</label>
+                            <select name="location_id" id="resLocationSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 focus:bg-white transition-all outline-none">
+                                <option value="">ทุกตำแหน่ง (FIFO อัตโนมัติ)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-slate-700 text-sm font-bold mb-2">จำนวน (ชิ้น)</label>
+                            <input type="number" name="quantity" min="1" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-lg font-bold focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 focus:bg-white transition-all outline-none">
+                        </div>
                     </div>
 
-                    <div class="mt-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">จำนวน (Qty):</label>
-                        <input type="number" name="quantity" min="1" required
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                    </div>
-
-                    <div class="mt-6 flex justify-end gap-2">
-                        <button type="button" onclick="closeReservationModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-                            ยกเลิก
-                        </button>
-                        <button type="submit" id="resSubmitBtn" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
+                    <div class="mt-8">
+                        <button type="submit" id="resSubmitBtn" class="w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-bold py-3 px-4 rounded-xl shadow-md transition-transform hover:-translate-y-0.5">
                             ยืนยันการจอง
                         </button>
                     </div>
@@ -322,6 +341,43 @@
     </div>
 
     <script>
+        // Offcanvas Logic
+        let activePanelId = null;
+
+        function openPanel(productId) {
+            closeAllPanels();
+            const panelId = 'panel-' + productId;
+            const panel = document.getElementById(panelId);
+            const overlay = document.getElementById('slideOverOverlay');
+
+            if (panel) {
+                overlay.classList.remove('opacity-0', 'pointer-events-none');
+                panel.classList.remove('translate-x-full', 'pointer-events-none');
+                panel.classList.add('pointer-events-auto');
+                activePanelId = panelId;
+            }
+        }
+
+        function closePanel(productId) {
+            const panelId = 'panel-' + productId;
+            const panel = document.getElementById(panelId);
+            const overlay = document.getElementById('slideOverOverlay');
+
+            if (panel) {
+                panel.classList.add('translate-x-full', 'pointer-events-none');
+                panel.classList.remove('pointer-events-auto');
+                overlay.classList.add('opacity-0', 'pointer-events-none');
+                activePanelId = null;
+            }
+        }
+
+        function closeAllPanels() {
+            if (activePanelId) {
+                closePanel(activePanelId.replace('panel-', ''));
+            }
+        }
+
+
         // Product → location stock data for location dropdown
         const productLocations = {!! json_encode(
             $products->mapWithKeys(function($p) use ($transitLocationIds) {
@@ -343,20 +399,8 @@
             })
         ) !!};
 
-        function toggleDetail(id) {
-            const el = document.getElementById(id);
-            const productId = id.replace('detail-', '');
-            const arrow = document.getElementById('arrow-' + productId);
-            if (el.classList.contains('hidden')) {
-                el.classList.remove('hidden');
-                if (arrow) arrow.style.transform = 'rotate(180deg)';
-            } else {
-                el.classList.add('hidden');
-                if (arrow) arrow.style.transform = 'rotate(0deg)';
-            }
-        }
-
         function openReservationModal(id, name, total, reserved) {
+            closeAllPanels(); // Close the sliding panel if open
             document.getElementById('reservationModal').classList.remove('hidden');
             document.getElementById('resProductId').value = id;
             document.getElementById('resModalName').innerText = name;
@@ -389,19 +433,24 @@
             const btn = document.getElementById('resSubmitBtn');
             const tabReserve = document.getElementById('tabReserve');
             const tabRelease = document.getElementById('tabRelease');
+            const indicator = document.getElementById('tabIndicator');
 
             if (type === 'reserve') {
                 form.action = "{{ route('reservation.reserve') }}";
                 btn.innerText = "ยืนยันการจอง";
-                btn.className = "bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded";
-                tabReserve.className = "flex-1 py-2 font-bold text-yellow-600 border-b-2 border-yellow-500 bg-yellow-50";
-                tabRelease.className = "flex-1 py-2 font-bold text-gray-500 hover:text-green-600";
+                btn.className = "w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-bold py-3 px-4 rounded-xl shadow-md transition-transform hover:-translate-y-0.5";
+                
+                tabReserve.classList.replace('text-slate-500', 'text-amber-600');
+                tabRelease.classList.replace('text-emerald-600', 'text-slate-500');
+                indicator.style.transform = 'translateX(0%)';
             } else {
                 form.action = "{{ route('reservation.release') }}";
                 btn.innerText = "ยืนยันการปลดจอง";
-                btn.className = "bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded";
-                tabReserve.className = "flex-1 py-2 font-bold text-gray-500 hover:text-yellow-600";
-                tabRelease.className = "flex-1 py-2 font-bold text-green-600 border-b-2 border-green-500 bg-green-50";
+                btn.className = "w-full bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold py-3 px-4 rounded-xl shadow-md transition-transform hover:-translate-y-0.5";
+                
+                tabRelease.classList.replace('text-slate-500', 'text-emerald-600');
+                tabReserve.classList.replace('text-amber-600', 'text-slate-500');
+                indicator.style.transform = 'translateX(100%)';
             }
         }
 
@@ -441,25 +490,29 @@
         // Dynamic Filtering
         function filterProducts() {
             let filter = document.getElementById('searchInput').value.toLowerCase();
-            let cards = document.querySelectorAll('.product-card');
+            let rows = document.querySelectorAll('.product-row');
             let hasVisible = false;
 
-            cards.forEach(card => {
-                let searchableText = card.getAttribute('data-search');
+            rows.forEach(row => {
+                let searchableText = row.getAttribute('data-search');
                 if (searchableText.includes(filter)) {
-                    card.style.display = '';
+                    row.style.display = '';
                     hasVisible = true;
                 } else {
-                    card.style.display = 'none';
+                    row.style.display = 'none';
                 }
             });
 
-            let emptyMessage = document.getElementById('emptySearchMessage');
-            let phpEmptyMsg = document.querySelector('.php-empty-msg');
-            
-            if (emptyMessage && !phpEmptyMsg) {
-                if (cards.length > 0) {
-                    emptyMessage.style.display = hasVisible ? 'none' : 'block';
+            let emptyRow = document.getElementById('emptyRow');
+            if (emptyRow) {
+                emptyRow.style.display = hasVisible || filter === '' ? 'none' : '';
+                if (!hasVisible && filter !== '') {
+                    emptyRow.innerHTML = `
+                    <td colspan="7" class="p-12 text-center text-slate-400">
+                        <div class="w-16 h-16 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center mx-auto mb-4"><span class="text-2xl">🔍</span></div>
+                        <p class="font-bold text-slate-600 text-lg">ไม่พบสินค้า</p>
+                        <p class="text-sm mt-1">ลองค้นหาด้วยคำอื่น</p>
+                    </td>`;
                 }
             }
         }
